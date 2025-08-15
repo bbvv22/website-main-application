@@ -99,13 +99,13 @@ const AboutSection = () => {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-10 items-center">
             <motion.div variants={itemVariants} className="lg:order-2">
               <div className="relative">
                 <img
                   src="/founder-new.jpg?v=2"
                   alt="Keerthi Rao - Founder of DWAPOR"
-                  className="w-full h-[600px] object-cover rounded-lg"
+                  className="w-auto h-[300px] object-cover rounded-lg"
                 />
                 <div className="absolute bottom-8 left-8 bg-dwapor-museum/90 backdrop-blur-sm px-6 py-4 rounded">
                   <div className="text-dwapor-amber font-serif text-xl mb-1">Keerthi Rao</div>

@@ -58,10 +58,10 @@ async def get_status_checks():
 app.include_router(api_router)
 
 # Serve main static assets
-app.mount("/static", StaticFiles(directory="build/static"), name="static")
+app.mount("/static", StaticFiles(directory=ROOT_DIR / "build/static"), name="static")
 
 # Serve products folder
-app.mount("/products", StaticFiles(directory="build/products"), name="products")
+app.mount("/products", StaticFiles(directory=ROOT_DIR / "build/products"), name="products")
 
 
 
@@ -69,7 +69,7 @@ app.mount("/products", StaticFiles(directory="build/products"), name="products")
 # Serve React frontend for all other routes
 @app.get("/{full_path:path}")
 def serve_react(full_path: str):
-    index_path = os.path.join("build", "index.html")
+    index_path = os.path.join(str(ROOT_DIR), "build", "index.html")
     return FileResponse(index_path)
 
 

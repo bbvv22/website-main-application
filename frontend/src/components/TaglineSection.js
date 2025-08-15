@@ -22,7 +22,7 @@ const TaglineSection = () => {
           March 25 — Present
         </p>
         <h1 className="text-5xl md:text-7xl font-serif text-black mb-6">
-          An unpunished sin
+          Who better than you
         </h1>
         <p className="max-w-2xl mx-auto text-base md:text-lg text-gray-800">
           Minimal cuts. Honest fabrics. For the soft rebel who whispers power through timeless elegance.

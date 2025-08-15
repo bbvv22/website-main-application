@@ -1,5 +1,24 @@
 export const products = [
   {
+    id: 6,
+    name: "Saffron",
+    shortDescription: "Mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship.",
+    fullDescription: "Indulge in regal sophistication with Saffron, a mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship. This exquisite piece is crafted from premium silk-cotton blend in a rich wine burgundy that echoes the luxury of ancient Mughal courts, adorned with intricate gold diamond motifs that shimmer like scattered treasures across the fabric.\n\nEach geometric diamond pattern is meticulously woven into the fabric using traditional brocade techniques, creating a subtle raised texture that catches light beautifully and adds depth to every movement. The golden threadwork forms delicate lattice patterns reminiscent of palace architecture, while the deep burgundy base creates a canvas of timeless elegance.\n\nSaffron's sophisticated square neckline frames your décolletage with regal grace, while the structured bodice with princess seams creates a flattering hourglass silhouette that celebrates feminine curves. The sleeveless design with wide shoulder straps ensures comfort and coverage, making it perfect for both day and evening wear. The cropped length sits elegantly at the natural waist, creating endless styling possibilities.\n\nThe luxurious silk-cotton blend offers breathable comfort with a subtle lustrous finish that photographs beautifully and feels divine against the skin. Experience the majesty of handwoven luxury—Saffron, where royal heritage meets modern sophistication in perfect harmony.",
+    price: 1599,
+    features: "Brocade Techniques • Gold Diamond Motifs • Princess Seams • Body Fit Top",
+    category: "tops",
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: ["Wine Burgundy", "Gold"],
+    fabric: "Premium Silk-cotton Blend",
+    care: "Dry clean recommended",
+    images: [
+      "/products/product - 6.1.jpg",
+      "/products/product -6.2.jpg",
+      "/products/product-6.3.jpg",
+      "/products/product - 6.4.jpg"
+    ]
+  },
+  {
     id: 1,
     name: "Aurora",
     shortDescription: "Captivating brocade peplum top that marries artisanal allure with modern elegance.",
@@ -99,25 +118,6 @@ export const products = [
       "/products/product-5.5.jpg",
       "/products/product-5.6.jpeg",
       "/products/product-5.7.jpg"
-    ]
-  },
-  {
-    id: 6,
-    name: "Saffron",
-    shortDescription: "Mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship.",
-    fullDescription: "Indulge in regal sophistication with Saffron, a mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship. This exquisite piece is crafted from premium silk-cotton blend in a rich wine burgundy that echoes the luxury of ancient Mughal courts, adorned with intricate gold diamond motifs that shimmer like scattered treasures across the fabric.\n\nEach geometric diamond pattern is meticulously woven into the fabric using traditional brocade techniques, creating a subtle raised texture that catches light beautifully and adds depth to every movement. The golden threadwork forms delicate lattice patterns reminiscent of palace architecture, while the deep burgundy base creates a canvas of timeless elegance.\n\nSaffron's sophisticated square neckline frames your décolletage with regal grace, while the structured bodice with princess seams creates a flattering hourglass silhouette that celebrates feminine curves. The sleeveless design with wide shoulder straps ensures comfort and coverage, making it perfect for both day and evening wear. The cropped length sits elegantly at the natural waist, creating endless styling possibilities.\n\nThe luxurious silk-cotton blend offers breathable comfort with a subtle lustrous finish that photographs beautifully and feels divine against the skin. Experience the majesty of handwoven luxury—Saffron, where royal heritage meets modern sophistication in perfect harmony.",
-    price: 1599,
-    features: "Brocade Techniques • Gold Diamond Motifs • Princess Seams • Body Fit Top",
-    category: "tops",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    colors: ["Wine Burgundy", "Gold"],
-    fabric: "Premium Silk-cotton Blend",
-    care: "Dry clean recommended",
-    images: [
-      "/products/product - 6.1.jpg",
-      "/products/product -6.2.jpg",
-      "/products/product-6.3.jpg",
-      "/products/product - 6.4.jpg"
     ]
   },
   {

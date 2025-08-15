@@ -7,6 +7,19 @@ const CollectionSection = () => {
   // Featured products (first 3 from your collection)
   const featuredProducts = [
     {
+      id: 6,
+      name: "Saffron",
+      description: "Mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship.",
+      features: "Brocade Techniques • Gold Diamond Motifs • Princess Seams • Body Fit Top",
+      category: "tops",
+      images: [
+        "/products/product - 6.1.jpg",
+        "/products/product -6.2.jpg",
+        "/products/product-6.3.jpg",
+        "/products/product - 6.4.jpg"
+      ]
+    },
+    {
       id: 1,
       name: "Aurora",
       description: "Captivating brocade peplum top that marries artisanal allure with modern elegance.",
@@ -30,21 +43,6 @@ const CollectionSection = () => {
         "/products/product-2.3.jpg",
         "/products/product-2.4.jpg",
         "/products/product-2.5.jpg"
-      ]
-    },
-    {
-      id: 3,
-      name: "Daisy",
-      description: "Enchanting embroidered camisole that transforms everyday elegance into something extraordinary.",
-      features: "Hand-embroidered Daisies • Sweetheart Neckline • Mesh Overlay",
-      category: "blouses",
-      images: [
-        "/products/product-3.1.jpg",
-        "/products/product-3.2.jpg",
-        "/products/product-3.3.jpg",
-        "/products/product-3.4.jpg",
-        "/products/product-3.5.jpg",
-        "/products/product-3.6.jpg"
       ]
     }
   ];

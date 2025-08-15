@@ -66,12 +66,13 @@ const FounderIntro = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
+            className="ml-auto"
           >
             <div className="relative">
               <img
                 src="/founder-new.jpg?v=2"
                 alt="Keerthi Rao - Founder of DWAPOR"
-                className="w-full h-[500px] object-cover rounded-lg"
+                className="w-auto h-[300px] object-cover rounded-lg"
               />
               <div className="absolute bottom-6 left-6 bg-dwapor-museum/90 backdrop-blur-sm px-4 py-3 rounded">
                 <div className="text-dwapor-amber font-serif text-lg mb-1">Keerthi Rao</div>
