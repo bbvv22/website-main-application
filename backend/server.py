@@ -63,8 +63,7 @@ app.mount("/static", StaticFiles(directory="build/static"), name="static")
 # Serve products folder
 app.mount("/products", StaticFiles(directory="build/products"), name="products")
 
-# Serve root-level assets (like favicon, images not in /static)
-app.mount("/", StaticFiles(directory="build"), name="root")
+
 
 
 # Serve React frontend for all other routes
