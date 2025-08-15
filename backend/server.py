@@ -1,6 +1,7 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
@@ -54,6 +55,17 @@ async def get_status_checks():
 
 # Include the router in the main app
 app.include_router(api_router)
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="build/static"), name="static")
+
+# Serve React frontend for all other routes
+@app.get("/{full_path:path}")
+def serve_react(full_path: str):
+    index_path = os.path.join("build", "index.html")
+    return FileResponse(index_path)
+
+
 
 app.add_middleware(
     CORSMiddleware,
