@@ -57,8 +57,15 @@ async def get_status_checks():
 # Include the router in the main app
 app.include_router(api_router)
 
-# Serve static files
+# Serve main static assets
 app.mount("/static", StaticFiles(directory="build/static"), name="static")
+
+# Serve products folder
+app.mount("/products", StaticFiles(directory="build/products"), name="products")
+
+# Serve root-level assets (like favicon, images not in /static)
+app.mount("/", StaticFiles(directory="build"), name="root")
+
 
 # Serve React frontend for all other routes
 @app.get("/{full_path:path}")
