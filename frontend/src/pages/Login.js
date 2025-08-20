@@ -101,7 +101,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dwapor-museum pt-24">
+    <div className="min-h-screen bg-dwapor-museum pt-48">
       <div className="max-w-md mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -35,9 +35,11 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   
-  const { cart, clearCart, getCartTotal, getCartItemsCount } = useCart();
+  const { cart, clearCart, getCartTotal, getCartItemsCount, discount } = useCart();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  const originalTotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   // Allow guest checkout; only redirect if cart empty
   useEffect(() => {
@@ -680,7 +682,17 @@ const Checkout = () => {
                   ))}
                 </div>
                 
-                <div className="mt-6 pt-4 border-t border-dwapor-soft-gray/20">
+                <div className="mt-6 pt-4 border-t border-dwapor-soft-gray/20 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-dwapor-soft-gray">Subtotal</span>
+                    <span className="text-dwapor-amber">₹{originalTotal.toFixed(2)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-dwapor-soft-gray">Coupon Discount</span>
+                      <span className="text-red-500">- ₹{discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-serif text-lg">
                     <span className="text-dwapor-amber">Total</span>
                     <span className="text-dwapor-gold">₹{getCartTotal().toFixed(2)}</span>

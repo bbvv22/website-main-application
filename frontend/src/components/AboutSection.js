@@ -99,43 +99,32 @@ const AboutSection = () => {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-10 items-center">
-            <motion.div variants={itemVariants} className="lg:order-2">
-              <div className="relative">
-                <img
-                  src="/founder-new.jpg?v=2"
-                  alt="Keerthi Rao - Founder of DWAPOR"
-                  className="w-auto h-[300px] object-cover rounded-lg"
-                />
-                <div className="absolute bottom-8 left-8 bg-dwapor-museum/90 backdrop-blur-sm px-6 py-4 rounded">
-                  <div className="text-dwapor-amber font-serif text-xl mb-1">Keerthi Rao</div>
-                  <div className="text-dwapor-gold font-sans text-sm tracking-wider">Founder & Creative Director</div>
-                </div>
-              </div>
-            </motion.div>
+          <div className="grid grid-cols-1 gap-10 items-center justify-items-center">
+            
 
-            <motion.div variants={itemVariants} className="lg:order-1 space-y-8">
-              <div>
+            <motion.div variants={itemVariants} className="space-y-8 flex flex-col items-center w-full">
+              <div className="max-w-prose mx-auto text-center">
+                <h3 className="font-serif text-xl text-dwapor-amber mb-4">Keerthi Rao</h3>
+                <p className="font-sans text-dwapor-soft-gray text-sm uppercase tracking-widest mb-6">FOUNDER & CREATIVE DIRECTOR</p>
                 <p className="font-sans text-dwapor-soft-gray text-lg leading-relaxed mb-6">
-                  <span className="text-dwapor-amber font-medium">Keerthi embodies the spirit of fearless femininity</span>—a 24-year-old visionary who traded the courtroom for the cutting room, choosing passion over predictability. With a law degree in hand but fashion in her heart, she embarked on an extraordinary journey to revolutionize how women experience ethnic wear.
+                  Keerthi embodies the spirit of fearless femininity—a 24-year-old visionary who traded the courtroom for the cutting room, choosing passion over predictability. With a law degree in hand but fashion in her heart, she embarked on an extraordinary journey to revolutionize how women experience ethnic wear.
                 </p>
-                
-                <p className="font-sans text-dwapor-soft-gray leading-relaxed mb-6">
+                <p className="font-sans text-dwapor-soft-gray text-lg leading-relaxed mb-6">
                   Born from the belief that every woman deserves to feel extraordinary in what she wears, Keerthi's story began during her law school days when she found herself constantly searching for ethnic pieces that married traditional craftsmanship with contemporary sensibilities. What started as personal frustration transformed into purposeful action.
                 </p>
               </div>
 
-              <div className="border-l-2 border-dwapor-gold pl-6">
+              <div className="border-l-2 border-dwapor-gold mx-auto max-w-prose text-center">
                 <blockquote className="font-serif text-xl text-dwapor-amber italic leading-relaxed mb-4">
                   "I realized that law taught me to advocate for others, but fashion allows me to empower them."
                 </blockquote>
-                <cite className="font-sans text-dwapor-soft-gray text-sm">— Keerthi Rao</cite>
+                <cite className="font-sans text-dwapor-soft-gray text-sm block">— Keerthi Rao</cite>
               </div>
 
-              <div>
+              <div className="max-w-prose mx-auto text-center">
                 <h3 className="font-serif text-xl text-dwapor-amber mb-4">A Foundation Built on Excellence</h3>
                 <p className="font-sans text-dwapor-soft-gray leading-relaxed">
-                  Her legal training instilled in her an unwavering attention to detail, analytical thinking, and a deep respect for authenticity—qualities that now define every piece in our collection. While her peers were drafting contracts, Keerthi was drafting dreams, envisioning a brand that would celebrate the intricate beauty of Indian textiles while serving the discerning tastes of today's confident women.
+                  Her legal training instilled in her an unwavering attention to detail, analytical thinking, and a deep respect for authenticity—qualities that now define every piece in our collection. While her peers were drafting contracts, Keerthi was drafting dreams, envisioning a brand that would celebrate the intricate beauty of Indian textiles while serving the discerning tastes of today’s confident women.
                 </p>
               </div>
             </motion.div>

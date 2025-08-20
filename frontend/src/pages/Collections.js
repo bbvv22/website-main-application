@@ -36,7 +36,7 @@ const Collections = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dwapor-museum pt-24 py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-dwapor-museum pt-48 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Collections Header */}

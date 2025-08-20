@@ -1,28 +1,77 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import axios from 'axios';
 
 import ProductGallery from '../components/ProductGallery';
+import Reviews from '../components/Reviews';
+import Notification from '../components/Notification';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const product = products.find(p => p.id === parseInt(id));
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
   const [quantity, setQuantity] = useState(1);
+  const [notification, setNotification] = useState({ show: false, message: '' });
   const [showSizeGuide, setShowSizeGuide] = useState(false);
-  
+
+  const [reviews, setReviews] = useState([]);
+
+  const handleAddReview = async (review) => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/reviews', {
+        ...review,
+        product_id: product.id,
+        user_id: 'test_user_id' // Hardcoded for now
+      });
+      setReviews([...reviews, response.data]);
+    } catch (error) {
+      console.error('Failed to submit review:', error);
+    }
+  };
+
+  const cmSizes = [
+    { size: 'S', bust: 86.4, waist: 76.2, hip: 102 },
+    { size: 'M', bust: 91.4, waist: 81.3, hip: 107 },
+    { size: 'L', bust: 96.5, waist: 86.4, hip: 112 },
+  ];
+
+  const inchSizes = [
+    { size: 'S', bust: 34, waist: 30, hip: 40 },
+    { size: 'M', bust: 36, waist: 32, hip: 42 },
+    { size: 'L', bust: 38, waist: 34, hip: 44 },
+  ];
+
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
 
+  const showNotification = (message) => {
+  setNotification({ show: true, message });
+  };
+
   const handleAddToWishlist = () => {
     addToWishlist(product);
-    alert(`${product.name} has been added to your wishlist!`);
+    showNotification(`${product.name} has been added to your wishlist!`);
   };
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/reviews/${product.id}`);
+        setReviews(response.data);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      }
+    };
+
+    if (product) {
+      fetchReviews();
+    }
+  }, [product]);
 
   if (!product) {
     return (
@@ -39,14 +88,12 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert('Please select a size');
+      showNotification('Please select a size');
       return;
     }
-    
+
     addToCart(product, selectedSize, selectedColor, quantity);
-    
-    // Show success message
-    alert(`Added ${quantity} x ${product.name} (Size: ${selectedSize}, Color: ${selectedColor}) to cart!`);
+    showNotification(`Added ${quantity} x ${product.name} to cart!`);
   };
 
   // urgency signals (mocked)
@@ -55,8 +102,20 @@ const ProductDetail = () => {
 
   const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 3);
 
+  const discount = product.price && product.discountedPrice
+    ? Math.round(((product.price - product.discountedPrice) / product.price) * 100)
+    : 0;
+
   return (
-    <div className="min-h-screen bg-dwapor-museum pt-24">
+    <div className="min-h-screen bg-dwapor-museum pt-48">
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            onClose={() => setNotification({ show: false, message: '' })}
+          />
+        )}
+      </AnimatePresence>
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <nav className="flex text-sm">
@@ -70,7 +129,7 @@ const ProductDetail = () => {
 
       <div className="max-w-5xl mx-auto px-8 py-16">
         <div className="space-y-12">
-          
+
           {/* Product Images */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -93,12 +152,17 @@ const ProductDetail = () => {
                 {product.name}
               </h1>
               <div className="flex items-center space-x-4 mb-8">
-                <span className="font-sans text-3xl text-dwapor-gold font-medium">
-                  ₹{product.price}
-                </span>
-                <span className="text-dwapor-soft-gray text-sm">
-                  (Inclusive of all taxes)
-                </span>
+                {product && product.discountedPrice &&
+                  <p className="text-3xl font-bold text-gray-900">₹{product.discountedPrice.toLocaleString()}</p>
+                }
+                {product && product.price && (
+                  <p className="text-xl text-gray-500 line-through">₹{product.price.toLocaleString()}</p>
+                )}
+                {discount > 0 && (
+                  <div className="bg-dwapor-amber text-white text-sm font-semibold px-3 py-1 rounded-full">
+                    {discount}% OFF
+                  </div>
+                )}
               </div>
               <p className="text-dwapor-soft-gray text-lg leading-relaxed">
                 {product.shortDescription}
@@ -110,6 +174,34 @@ const ProductDetail = () => {
                 )}
                 <div className="text-dwapor-soft-gray text-sm">{recentViews} people viewed this item in the last hour</div>
               </div>
+            </div>
+
+            {/* Simplified Size Chart */}
+            <div className="bg-white p-4 rounded-lg border border-dwapor-soft-gray/20">
+              <h3 className="font-sans text-dwapor-amber text-sm uppercase tracking-wider mb-2">Quick Size Guide (CM)</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bust</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waist</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hip</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {cmSizes.slice(0, 3).map((row) => (
+                      <tr key={row.size}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">{row.size}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.bust}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.waist}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.hip}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Link to="/size-guide" className="text-dwapor-soft-gray hover:text-dwapor-amber underline underline-offset-4 text-sm mt-2 block text-right">View Full Size Guide</Link>
             </div>
 
             {/* Size Selection */}
@@ -134,7 +226,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            
 
             {/* Quantity */}
             <div>
@@ -160,6 +251,30 @@ const ProductDetail = () => {
               </div>
             </div>
 
+            {/* Offers */}
+            <div className="mt-8 p-6 bg-dwapor-light-gold/10 border border-dwapor-gold/30 rounded-lg shadow-sm">
+              <h3 className="font-sans text-dwapor-gold text-base uppercase tracking-wider mb-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v2H5V5zm0 4h10v2H5V9zm0 4h10v2H5v-2z" clipRule="evenodd" />
+                </svg>
+                Exclusive Offers
+              </h3>
+              <ul className="space-y-3">
+                <li className="flex items-center text-gray-800 text-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-dwapor-gold flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Shop for Rs. 2500 and more and get Rs. 250 off - Code: <span className="font-bold text-dwapor-gold ml-1">YAYY250</span>
+                </li>
+                <li className="flex items-center text-gray-800 text-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-dwapor-gold flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Shop for Rs. 5000 and more and get Rs. 500 off - Code: <span className="font-bold text-dwapor-gold ml-1">YAYY500</span>
+                </li>
+              </ul>
+            </div>
+
             {/* Add to Cart & Wishlist */}
             <div className="flex space-x-4">
               <motion.button
@@ -181,14 +296,14 @@ const ProductDetail = () => {
               </motion.button>
             </div>
             <div className="flex items-center justify-between text-sm mt-3">
-              <button onClick={() => setShowSizeGuide(true)} className="text-dwapor-soft-gray hover:text-dwapor-amber underline underline-offset-4">Size Guide</button>
+              <Link to="/size-guide" className="text-dwapor-soft-gray hover:text-dwapor-amber underline underline-offset-4">Size Guide</Link>
               <span className="text-dwapor-soft-gray">Free returns within 14 days</span>
             </div>
 
             {/* Quick question form */}
             <div className="mt-8 p-6 border border-dwapor-soft-gray/20 rounded-lg bg-white">
               <h3 className="font-sans text-dwapor-amber text-sm uppercase tracking-wider mb-4">Have a question about this item?</h3>
-              <form onSubmit={(e) => { e.preventDefault(); alert('Thanks! We will get back to you shortly.'); e.target.reset(); }} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <form onSubmit={(e) => { e.preventDefault(); showNotification('Thanks! We will get back to you shortly.'); e.target.reset(); }} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input name="name" required placeholder="Name" className="border border-dwapor-soft-gray/30 rounded-md px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-dwapor-amber" />
                 <input name="email" required type="email" placeholder="Email" className="border border-dwapor-soft-gray/30 rounded-md px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-dwapor-amber" />
                 <input name="question" required placeholder="Your question" className="border border-dwapor-soft-gray/30 rounded-md px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-dwapor-amber md:col-span-1" />
@@ -228,17 +343,58 @@ const ProductDetail = () => {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6" onClick={() => setShowSizeGuide(false)}>
             <div className="bg-white rounded-xl max-w-lg w-full p-6" onClick={(e) => e.stopPropagation()}>
               <h3 className="font-serif text-2xl text-dwapor-museum mb-4">Size Guide</h3>
-              <p className="text-sm text-dwapor-museum/70 mb-4">Measurements in inches. Choose your usual size; this style has a tailored fit.</p>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="font-medium">Size</div>
-                <div className="font-medium">Bust</div>
-                <div className="font-medium">Waist</div>
-                <div>XS</div><div>31–32</div><div>24–25</div>
-                <div>S</div><div>33–34</div><div>26–27</div>
-                <div>M</div><div>35–36</div><div>28–29</div>
-                <div>L</div><div>37–38</div><div>30–31</div>
-                <div>XL</div><div>39–40</div><div>32–33</div>
+              <p className="text-sm text-dwapor-museum/70 mb-4">Measurements in inches and centimeters.</p>
+              
+              {/* CM Sizes Table */}
+              <h4 className="font-sans text-dwapor-amber text-sm uppercase tracking-wider mb-2 mt-4">Centimeters (CM)</h4>
+              <div className="overflow-x-auto mb-6">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bust</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waist</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hip</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {cmSizes.map((row) => (
+                      <tr key={row.size}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">{row.size}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.bust}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.waist}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.hip}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+
+              {/* Inches Sizes Table */}
+              <h4 className="font-sans text-dwapor-amber text-sm uppercase tracking-wider mb-2">Inches</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bust</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waist</th>
+                      <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hip</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {inchSizes.map((row) => (
+                      <tr key={row.size}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">{row.size}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.bust}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.waist}</td>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-500">{row.hip}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
               <div className="text-right mt-6">
                 <button className="px-4 py-2 bg-dwapor-amber text-dwapor-museum rounded" onClick={() => setShowSizeGuide(false)}>Close</button>
               </div>
@@ -262,6 +418,7 @@ const ProductDetail = () => {
                 {product.fullDescription}
               </p>
             </div>
+            <Reviews product={{...product, reviews}} onAddReview={handleAddReview} />
           </div>
         </motion.div>
 

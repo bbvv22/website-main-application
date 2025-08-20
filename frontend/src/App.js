@@ -23,6 +23,8 @@ import ReturnExchange from './pages/ReturnExchange';
 import FAQ from './pages/FAQ';
 import OrderDetails from './pages/OrderDetails';
 import TermsOfService from './pages/TermsOfService';
+import ContactUs from './pages/ContactUs';
+import SizeGuide from './pages/SizeGuide';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
@@ -156,6 +158,27 @@ function AnimatedRoutes() {
             <>
               <Header />
               <TermsOfService />
+              <Footer />
+            </>
+          } />
+          <Route path="/contact" element={
+            <>
+              <Header />
+              <ContactUs />
+              <Footer />
+            </>
+          } />
+          <Route path="/size-guide" element={
+            <>
+              <Header />
+              <SizeGuide />
+              <Footer />
+            </>
+          } />
+          <Route path="/contact" element={
+            <>
+              <Header />
+              <ContactUs />
               <Footer />
             </>
           } />

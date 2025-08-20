@@ -5,9 +5,11 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
 const Cart = ({ isOpen, onClose }) => {
-  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount } = useCart();
+  const { cart, removeFromCart, updateQuantity, getCartTotal, getCartItemsCount, applyCoupon, discount } = useCart();
   const { isAuthenticated } = useAuth();
   const [isVisible, setIsVisible] = useState(isOpen);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponMessage, setCouponMessage] = useState(null);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -22,6 +24,11 @@ const Cart = ({ isOpen, onClose }) => {
     } else {
       updateQuantity(itemId, newQuantity);
     }
+  };
+
+  const handleApplyCoupon = () => {
+    const message = applyCoupon(couponCode, getCartTotal());
+    setCouponMessage(message);
   };
 
   if (!isOpen) return null;
@@ -151,11 +158,33 @@ const Cart = ({ isOpen, onClose }) => {
                     <span className="font-serif text-xl text-dwapor-gold">₹{getCartTotal().toFixed(2)}</span>
                   </div>
                   
+                  {/* Coupon Code Input */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Enter Coupon Code"
+                      className="flex-1 p-2 border border-dwapor-soft-gray/20 rounded-md text-black text-sm focus:outline-none focus:ring-1 focus:ring-dwapor-amber"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="bg-white text-black px-4 py-2 rounded-md font-sans text-sm uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponMessage && (
+                    <p className={`text-sm ${couponMessage.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                      {couponMessage.text}
+                    </p>
+                  )}
+                  
                   {isAuthenticated ? (
                     <Link
                       to="/checkout"
                       onClick={handleClose}
-                      className="block w-full bg-dwapor-amber text-dwapor-museum text-center py-3 px-6 font-sans text-sm uppercase tracking-wider hover:bg-dwapor-gold transition-colors"
+                      className="block w-full bg-white text-black text-center py-3 px-6 font-sans text-sm uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
                     >
                       Proceed to Checkout
                     </Link>
@@ -164,7 +193,7 @@ const Cart = ({ isOpen, onClose }) => {
                       <Link
                         to="/checkout"
                         onClick={handleClose}
-                        className="block w-full bg-dwapor-amber text-dwapor-museum text-center py-3 px-6 font-sans text-sm uppercase tracking-wider hover:bg-dwapor-gold transition-colors"
+                        className="block w-full bg-white text-black text-center py-3 px-6 font-sans text-sm uppercase tracking-wider border border-black hover:bg-black hover:text-white transition-colors"
                       >
                         Checkout as Guest
                       </Link>

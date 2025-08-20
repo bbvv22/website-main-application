@@ -1,40 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Orders = () => {
-  const [orders, setOrders] = useState([
-    {
-      id: '#12346',
-      date: '2024-08-10',
-      status: 'Processing',
-      total: '₹5,000.00',
-      items: [{ name: 'New Arrival', image: '/products/product-4.1.jpg' }],
-    },
-    {
-      id: '#12345',
-      date: '2024-08-12',
-      status: 'Shipped',
-      total: '₹11,500.00',
-      items: [
-        { name: 'Aurora', image: '/products/product-1.1.jpg' },
-        { name: 'Mirage', image: '/products/product-2.1.jpg' },
-      ],
-    },
-    {
-      id: '#12344',
-      date: '2024-08-08',
-      status: 'Delivered',
-      total: '₹8,200.00',
-      items: [{ name: 'Daisy', image: '/products/product-3.1.jpg' }],
-    },
-    {
-      id: '#12343',
-      date: '2024-08-01',
-      status: 'Delivered',
-      total: '₹6,000.00',
-      items: [{ name: 'Old Item', image: '/products/product-5.1.jpg' }],
-    },
-  ]);
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders`);
+        setOrders(response.data);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -122,7 +103,7 @@ const Orders = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen py-32 px-4 sm:px-6 lg:px-8">
+    <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-serif text-center text-black mb-12">My Orders</h1>
         <div className="space-y-8">

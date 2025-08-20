@@ -9,7 +9,8 @@ const CART_ACTIONS = {
   REMOVE_ITEM: 'REMOVE_ITEM',
   UPDATE_QUANTITY: 'UPDATE_QUANTITY',
   CLEAR_CART: 'CLEAR_CART',
-  LOAD_CART: 'LOAD_CART'
+  LOAD_CART: 'LOAD_CART',
+  SET_DISCOUNT: 'SET_DISCOUNT'
 };
 
 // Cart Reducer
@@ -98,6 +99,12 @@ const cartReducer = (state, action) => {
     case CART_ACTIONS.LOAD_CART:
       return action.payload;
 
+    case CART_ACTIONS.SET_DISCOUNT:
+      return {
+        ...state,
+        discount: action.payload,
+      };
+
     default:
       return state;
   }
@@ -107,7 +114,8 @@ const cartReducer = (state, action) => {
 const initialState = {
   items: [],
   totalItems: 0,
-  totalPrice: 0
+  totalPrice: 0,
+  discount: 0
 };
 
 // Cart Provider
@@ -157,8 +165,34 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: CART_ACTIONS.CLEAR_CART });
   };
 
+  const applyCoupon = (couponCode, cartTotal) => {
+    let discountAmount = 0;
+    let message = { type: 'error', text: 'Invalid coupon code or cart amount.' };
+
+    if (couponCode === 'YAYY250') {
+      if (cartTotal >= 2500) {
+        discountAmount = 250;
+        message = { type: 'success', text: 'YAYY250 applied! You got ₹250 off.' };
+      } else {
+        message = { type: 'error', text: 'Cart amount must be ₹2500 or more for YAYY250.' };
+      }
+    } else if (couponCode === 'YAYY500') {
+      if (cartTotal >= 5000) {
+        discountAmount = 500;
+        message = { type: 'success', text: 'YAYY500 applied! You got ₹500 off.' };
+      } else {
+        message = { type: 'error', text: 'Cart amount must be ₹5000 or more for YAYY500.' };
+      }
+    } else {
+      message = { type: 'error', text: 'Invalid coupon code.' };
+    }
+
+    dispatch({ type: CART_ACTIONS.SET_DISCOUNT, payload: discountAmount });
+    return message;
+  };
+
   const getCartTotal = () => {
-    return cartState.totalPrice;
+    return Math.max(0, cartState.totalPrice - cartState.discount);
   };
 
   const getCartItemsCount = () => {
@@ -172,7 +206,9 @@ export const CartProvider = ({ children }) => {
     updateQuantity,
     clearCart,
     getCartTotal,
-    getCartItemsCount
+    getCartItemsCount,
+    applyCoupon,
+    discount: cartState.discount
   };
 
   return (
