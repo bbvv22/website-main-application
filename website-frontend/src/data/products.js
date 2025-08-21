@@ -1,0 +1,165 @@
+export const products = [
+  {
+    id: 6,
+    name: "RANI",
+    shortDescription: "Mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship.",
+    fullDescription: "Meet RANI — a statement blouse that blends Indian heritage with unapologetic modern edge. Crafted in a rich plum-hued fabric with a subtle sheen, this top features delicate handwoven-inspired motifs that nod to traditional ikat weaving while keeping the look clean and contemporary.\n\nThe structured silhouette is designed to flatter, with princess seams for a sculpted fit and a bold square neckline that frames the collarbones beautifully. Wide shoulder straps offer comfort and strength — this is a piece made for standing tall.\n\nWhether you pair it with denim, a sari, or tailored trousers, RANI is made to break expectations.\n\nShe’s not just a top. She’s a takeover.\nThis is tradition, rewritten on your terms.",
+    price: 1110,
+    discountedPrice: 999,
+    features: "Brocade Techniques • Gold Diamond Motifs • Princess Seams • Body Fit Top",
+    category: "tops",
+    sizes: ["S", "M", "L"],
+    colors: ["Wine Burgundy", "Gold"],
+    fabric: "Premium Silk-cotton Blend",
+    care: "Dry clean recommended",
+    images: [
+      "/products/product - 6.1.jpg",
+      "/products/product -6.2.jpg",
+      "/products/product-6.3.jpg",
+      "/products/product - 6.4.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 1,
+    name: "Azure Bloom blue top",
+    shortDescription: "Step into effortless elegance with the Azure Bloom Midi Dress. Crafted from a soft fabric, this dress features a serene palette of muted blue and ivory, adorned with delicate floral motifs reminiscent of watercolor blooms. The square neckline and wide straps frame the shoulders gracefully, while the tailored bodice flatters the silhouette. Perfect for garden parties, coastal getaways, or a day when you simply want to escape the ordinary.",
+    fullDescription: "Step into effortless elegance with the Azure Bloom Midi Dress. Crafted from a soft fabric, this dress features a serene palette of muted blue and ivory, adorned with delicate floral motifs reminiscent of watercolor blooms. The square neckline and wide straps frame the shoulders gracefully, while the tailored bodice flatters the silhouette. Perfect for garden parties, coastal getaways, or a day when you simply want to escape the ordinary.",
+    price: 1333,
+    discountedPrice: 1200,
+    features: "Hand-embroidered • Silk-blend Jacquard • Metallic Threadwork • Body Fit Top",
+    category: "blouses",
+    sizes: ["S", "M", "L"],
+    colors: ["Dove Grey", "Misty Blue"],
+    fabric: "Silk-blend Jacquard",
+    care: "Dry clean only",
+    images: [
+      "/products/product-1.1.jpg",
+      "/products/product-1.2.jpg",
+      "/products/product-1.3.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 2,
+    name: "Rory wrap top",
+    shortDescription: "Grace meets heritage in this rory wrap too, Designed with a flattering deep V-neckline and a tailored wrap fit, it beautifully accentuates the waist while offering an elegant silhouette. The fabric is adorned and inspired by the timeless buta patterns of Kashmir, symbolizing fertility, eternity, and life.\n\nRendered in soothing shades of mauve and white, this sleeveless top is perfect for both modern styling and traditional fusion wear. Pair it with jhumkas and a flowing skirt for a festive ensemble, or style it with crisp trousers for a chic Indo-western look. A versatile piece that celebrates India’s textile artistry with contemporary elegance .",
+    fullDescription: "Grace meets heritage in this rory wrap too, Designed with a flattering deep V-neckline and a tailored wrap fit, it beautifully accentuates the waist while offering an elegant silhouette. The fabric is adorned and inspired by the timeless buta patterns of Kashmir, symbolizing fertility, eternity, and life.\n\nRendered in soothing shades of mauve and white, this sleeveless top is perfect for both modern styling and traditional fusion wear. Pair it with jhumkas and a flowing skirt for a festive ensemble, or style it with crisp trousers for a chic Indo-western look. A versatile piece that celebrates India’s textile artistry with contemporary elegance .",
+    price: 999,
+    discountedPrice: 899,
+    features: "Block-print Artistry • Cotton-silk Blend • V-neckline • Body Fit Top",
+    category: "bustiers",
+    sizes: ["S", "M", "L"],
+    colors: ["Ivory", "Mauve", "Rose"],
+    fabric: "Cotton-silk Blend",
+    care: "Hand wash cold",
+    images: [
+      "/products/product-2.1.jpg",
+      "/products/product-2.2.jpg",
+      "/products/product-2.3.jpg",
+      "/products/product-2.4.jpg",
+      "/products/product-2.5.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 3,
+    name: "Beige blossom Peplum Top 🌼✨",
+    shortDescription: "Simple yet graceful, the beige blossom Top draws its charm from the timeless elegance of South India. Crafted in a soft beige fabric with delicate floral embroidery, it carries the essence of jasmine , a flower cherished across Tamil Nadu, Andhra, Karnataka, and Kerala for its purity and fragrance.\n\nThe light spaghetti straps and gathered peplum hem make it a breezy choice for warm, coastal days, while the embroidered motifs add a touch of festive finesse. Pair it with denims for a casual look or style it with a flowy skirt and silver jhumkas for a perfect Indo-fusion ensemble.\n\nA top that celebrates the everyday beauty of South Indian simplicity — subtle, refreshing, and effortlessly elegant.",
+    fullDescription: "Simple yet graceful, the beige blossom Top draws its charm from the timeless elegance of South India. Crafted in a soft beige fabric with delicate floral embroidery, it carries the essence of jasmine , a flower cherished across Tamil Nadu, Andhra, Karnataka, and Kerala for its purity and fragrance.\n\nThe light spaghetti straps and gathered peplum hem make it a breezy choice for warm, coastal days, while the embroidered motifs add a touch of festive finesse. Pair it with denims for a casual look or style it with a flowy skirt and silver jhumkas for a perfect Indo-fusion ensemble.\n\nA top that celebrates the everyday beauty of South Indian simplicity — subtle, refreshing, and effortlessly elegant.",
+    price: 1110,
+    discountedPrice: 999,
+    features: "Hand-embroidered Daisies • Sweetheart Neckline • Mesh Overlay • Body Fit Top",
+    category: "blouses",
+    sizes: ["S", "M", "L"],
+    colors: ["Champagne", "White"],
+    fabric: "Silk-cotton Blend",
+    care: "Dry clean recommended",
+    images: [
+      "/products/product-3.1.jpg",
+      "/products/product-3.2.jpg",
+      "/products/product-3.3.jpg",
+      "/products/product-3.4.jpg",
+      "/products/product-3.5.jpg",
+      "/products/product-3.6.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 4,
+    name: "Gulbahar Handblock Patchwork Top 🌸",
+    shortDescription: "Step into timeless elegance with this Gulbahar Handblock Patchwork Top. Crafted from soft cotton, this sleeveless piece features a classic square neckline and a flattering fit that enhances your natural silhouette. The deep maroon palette is brought to life with intricate black-and-white handblock motifs, inspired by traditional Bagru and Ajrakh prints of Rajasthan and Gujarat.\n\nPair it with oxidized jhumkas and denim for a fusion look, or team it with a long skirt for that perfect desi vibe. This top beautifully blends contemporary cuts with heritage artistry, making it a versatile choice for both casual outings , party wear and festive gatherings .",
+    fullDescription: "Step into timeless elegance with this Gulbahar Handblock Patchwork Top. Crafted from soft cotton, this sleeveless piece features a classic square neckline and a flattering fit that enhances your natural silhouette. The deep maroon palette is brought to life with intricate black-and-white handblock motifs, inspired by traditional Bagru and Ajrakh prints of Rajasthan and Gujarat.\n\nPair it with oxidized jhumkas and denim for a fusion look, or team it with a long skirt for that perfect desi vibe. This top beautifully blends contemporary cuts with heritage artistry, making it a versatile choice for both casual outings , party wear and festive gatherings .",
+    price: 999,
+    discountedPrice: 899,
+    features: "Patchwork Design • Block-print Techniques • Lace-up Back • Body Fit Top",
+    category: "tops",
+    sizes: ["S", "M", "L"],
+    colors: ["Burgundy", "Maroon", "Wine Red"],
+    fabric: "Premium Cotton Voile",
+    care: "Machine wash gentle",
+    images: [
+      "/products/product-4.1.jpg",
+      "/products/product-4.2.jpg",
+      "/products/product-4.3.jpg",
+      "/products/product-4.4.jpg",
+      "/products/product-4.5.jpg",
+      "/products/product-4.6.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 5,
+    name: "KAMALA",
+    shortDescription: "Enchanting floral embroidered crop top that whispers tales of blooming gardens and feminine grace.",
+    fullDescription: "Crafted in a soft blush pink fabric with intricate floral embroidery, Kamala brings together traditional Indian textile elegance with a fresh, feminine silhouette. The square neckline and wide straps provide structure and comfort, while the delicate threadwork, accented with a hint of shimmer, adds subtle luxury to every thread.\n\nThe back features an elegant tie-up detail that allows for a customizable fit, while keeping the look effortlessly delicate. Whether you’re styling it with jeans for a modern day out or pairing it with a sari or skirt for something more ceremonial, Kamala is designed to move with you — calm, bold, and entirely in bloom.\n\nKamala isn’t just worn — she’s felt.\nRooted in tradition, made for today.",
+    price: 1333,
+    discountedPrice: 1200,
+    features: "Hand-embroidered Florals • Back-tie Design • Sequin Accents • Body Fit Top",
+    category: "corsets",
+    sizes: ["S", "M", "L"],
+    colors: ["Rose", "Champagne", "Pink"],
+    fabric: "Silk-cotton Jacquard",
+    care: "Dry clean only",
+    images: [
+      "/products/product-5.1.jpg",
+      "/products/product-5.2.jpg",
+      "/products/product-5.3.jpg",
+      "/products/product-5.4.jpg",
+      "/products/product-5.5.jpg",
+      "/products/product-5.6.jpeg",
+      "/products/product-5.7.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  },
+  {
+    id: 7,
+    name: "YUDHA",
+    shortDescription: "Stunning white textured crop top that epitomizes refined femininity and artisanal mastery.",
+    fullDescription: "This structured white blouse is more than just a staple – it’s armour in softness.\nDesigned in a clean geometric-textured fabric, Yudha stands tall with its sharp square neckline, strong shoulders, and sculpted silhouette that flatters with intention.\n\nThe fitted bodice is balanced by a wide waistband, offering both shape and strength. The tie-up back adds adjustability, while keeping the look effortlessly delicate. Crisp, breathable, and powerful in its simplicity – Yudha is made to be worn when you’re ready to lead, not follow.\n\nPair it with denim, drapes, or trousers – Yudha doesn’t blend in.\nShe holds her ground – calm, centered, and utterly unshaken.",
+    price: 999,
+    discountedPrice: 899,
+    features: "White-on-white Embroidery • Braided Cord Ties • Geometric Patterns • Body Fit Top",
+    category: "fantasy",
+    sizes: ["S", "M", "L"],
+    colors: ["Pristine White"],
+    fabric: "Cotton-silk Jacquard",
+    care: "Hand wash or dry clean",
+    images: [
+      "/products/product - 7.1.jpg",
+      "/products/product-7.2.jpg",
+      "/products/product-7.3.jpg",
+      "/products/product -7.4.jpg",
+      "/products/product - 7.5.jpg"
+    ],
+    rating: 0,
+    reviews: []
+  }
+];
+
