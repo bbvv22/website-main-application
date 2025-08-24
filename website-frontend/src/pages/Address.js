@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const Address = () => {
+  const { user, updateUserData } = useAuth();
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     streetAddress: '',
     city: '',
     state: '',
@@ -14,7 +17,19 @@ const Address = () => {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { updateUserData } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const nameParts = user.username ? user.username.split(' ') : ['', ''];
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.firstName || firstName,
+        lastName: user.lastName || lastName,
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,6 +45,10 @@ const Address = () => {
     }
     if (!formData.streetAddress || !formData.city || !formData.state || !formData.zipCode) {
       setError('Please fill out all address fields.');
+      return;
+    }
+    if (!formData.firstName || !formData.lastName) {
+      setError('Please fill out your first and last name.');
       return;
     }
 
@@ -58,6 +77,30 @@ const Address = () => {
               </div>
             )}
             <form className="space-y-6" onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-dwapor-soft-gray text-sm font-medium mb-2">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-dwapor-amber"
+                    placeholder="First Name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-dwapor-soft-gray text-sm font-medium mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-dwapor-amber"
+                    placeholder="Last Name"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="block text-dwapor-soft-gray text-sm font-medium mb-2">Street Address</label>
                 <input

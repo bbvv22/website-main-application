@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -33,11 +34,11 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const { cart, clearCart, getCartTotal, getCartItemsCount, discount } = useCart();
+  const { cartItems, clearCart, getTotalPrice, getTotalItems, discount, couponCode } = useCart();
   const { user, isAuthenticated, updateUserData, refreshUserData } = useAuth();
   const navigate = useNavigate();
 
-  const originalTotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const calculatedSubtotal = cartItems.reduce((sum, item) => sum + ((item.product.discounted_price || item.product.price) * item.quantity), 0);
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -49,10 +50,10 @@ const Checkout = () => {
   // Allow guest checkout; only redirect if cart empty
   useEffect(() => {
     if (orderPlaced) return;
-    if (cart.items.length === 0) {
+    if (cartItems.length === 0) {
       navigate('/collections');
     }
-  }, [cart.items.length, navigate, orderPlaced]);
+  }, [cartItems.length, navigate, orderPlaced]);
 
   // ✅ Force refresh user data when checkout loads
   useEffect(() => {
@@ -188,21 +189,27 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateStep(currentStep)) return;
+    console.log('handleSubmit called');
+    if (!validateStep(currentStep)) {
+      console.log('Validation failed for current step');
+      return;
+    }
+    console.log('Validation passed for current step');
 
     setLoading(true);
     try {
       // Save user details
+      console.log('Attempting to update user data...');
       await updateUserData(formData);
-
-      // Simulate order processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('User data updated successfully.');
 
       // Create order data
       const orderData = {
-        id: `ORDER-${Date.now()}`,
-        items: cart.items,
-        total: getCartTotal(),
+        userId: user.id,
+        items: cartItems,
+        total: getTotalPrice(),
+        discount: discount,
+        couponCode: couponCode,
         customerInfo: {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -233,19 +240,26 @@ const Checkout = () => {
         orderDate: new Date().toISOString(),
         status: 'confirmed'
       };
+      console.log('Order data constructed:', orderData);
+
+      // Send order to backend
+      console.log('Attempting to send order data to backend...');
+      const response = await axios.post('http://localhost:8000/api/orders', orderData);
+      console.log('Order placed successfully:', response.data);
 
       // Clear cart and navigate to success page
       setOrderPlaced(true);
       clearCart();
-      navigate('/order-success', { state: { orderData } });
+      navigate('/order-success', { state: { orderData: response.data } });
     } catch (error) {
+      console.error('Error in handleSubmit:', error);
       setErrors({ submit: 'Order processing failed. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAuthenticated || cart.items.length === 0) {
+  if (!isAuthenticated || cartItems.length === 0) {
     return null; // Will redirect via useEffect
   }
 
@@ -580,8 +594,8 @@ const Checkout = () => {
                       <div className="bg-stone-50 rounded-lg p-4 mb-6">
                         <div className="space-y-2">
                           <div className="flex justify-between">
-                            <span>Subtotal ({getCartItemsCount()} items)</span>
-                            <span>₹{originalTotal.toLocaleString()}</span>
+                            <span>Subtotal ({getTotalItems()} items)</span>
+                            <span>₹{calculatedSubtotal.toLocaleString()}</span>
                           </div>
                           {discount > 0 && (
                             <div className="flex justify-between text-green-600">
@@ -595,7 +609,7 @@ const Checkout = () => {
                           </div>
                           <div className="border-t pt-2 flex justify-between font-semibold text-lg">
                             <span>Total</span>
-                            <span>₹{getCartTotal().toLocaleString()}</span>
+                            <span>₹{getTotalPrice().toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -650,21 +664,21 @@ const Checkout = () => {
               <h3 className="text-lg font-semibold text-stone-900 mb-4">Order Summary</h3>
               
               <div className="space-y-4 mb-6">
-                {cart.items.map((item) => (
+                {cartItems.map((item) => (
                   <div key={`${item.id}-${item.size}-${item.color}`} className="flex items-center space-x-3">
                     <div className="w-16 h-16 bg-stone-100 rounded-lg overflow-hidden">
                       <img
-                        src={item.image}
-                        alt={item.name}
+                        src={item.product.images[0]}
+                        alt={item.product.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium text-stone-900 text-sm">{item.name}</h4>
+                      <h4 className="font-medium text-stone-900 text-sm">{item.product.name}</h4>
                       <p className="text-stone-500 text-xs">
                         {item.size} | {item.color} | Qty: {item.quantity}
                       </p>
-                      <p className="font-semibold text-stone-900">₹{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-semibold text-stone-900">₹{((item.product.discounted_price || item.product.price) * item.quantity).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
@@ -673,7 +687,7 @@ const Checkout = () => {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal</span>
-                  <span>₹{originalTotal.toLocaleString()}</span>
+                  <span>₹{calculatedSubtotal.toLocaleString()}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
@@ -687,7 +701,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between font-semibold text-lg pt-2 border-t">
                   <span>Total</span>
-                  <span>₹{getCartTotal().toLocaleString()}</span>
+                  <span>₹{getTotalPrice().toLocaleString()}</span>
                 </div>
               </div>
             </div>

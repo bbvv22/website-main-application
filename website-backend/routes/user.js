@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const User = require('../models/user');
+const { User } = require('../models');
 
 // GET user details by ID
 router.get("/:id/details", /* TODO: Add authentication and authorization middleware */ async (req, res) => {

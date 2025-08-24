@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // Import useAuth to get user ID
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -8,15 +9,29 @@ const OrderDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [selectedOrderItems, setSelectedOrderItems] = useState([]);
+
+  const handleItemSelection = (itemId) => {
+    setSelectedOrderItems(prevSelected => {
+      if (prevSelected.includes(itemId)) {
+        return prevSelected.filter(id => id !== itemId);
+      } else {
+        return [...prevSelected, itemId];
+      }
+    });
+  };
+
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnReason, setReturnReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
-  const [returnImage, setReturnImage] = useState(null);
+  // const [returnImage, setReturnImage] = useState(null); // Removed image upload functionality
+
+  const { user } = useAuth(); // Get user from AuthContext
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders/${orderId}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders/single/${orderId}`);
         setOrder(response.data);
       } catch (err) {
         setError('Failed to fetch order details.');
@@ -37,7 +52,7 @@ const OrderDetails = () => {
     return today <= sevenDaysAfterDelivery;
   };
 
-  const isRefundEligible = (deliveryDateString) => {
+  const isRefundEligible = (deliveryDateString) => { // This function name is misleading now, but its logic is for refund eligibility
     if (!deliveryDateString) return false; // Cannot refund if not delivered
     const deliveryDate = new Date(deliveryDateString);
     const today = new Date();
@@ -54,7 +69,7 @@ const OrderDetails = () => {
     setShowReturnModal(false);
     setReturnReason('');
     setOtherReason('');
-    setReturnImage(null);
+    // setReturnImage(null); // Removed image upload functionality
   };
 
   const handleReturnReasonChange = (e) => {
@@ -64,13 +79,17 @@ const OrderDetails = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setReturnImage(e.target.files[0]);
-    }
-  };
+  // const handleImageChange = (e) => { // Removed image upload functionality
+  //   if (e.target.files && e.target.files[0]) {
+  //     setReturnImage(e.target.files[0]);
+  //   }
+  // };
 
-  const handleSubmitReturn = () => {
+  const handleSubmitReturn = async () => {
+    if (selectedOrderItems.length === 0) {
+      alert('Please select at least one item to return.');
+      return;
+    }
     if (!returnReason) {
       alert('Please select a reason for return.');
       return;
@@ -80,19 +99,35 @@ const OrderDetails = () => {
       return;
     }
 
-    const returnDetails = {
-      orderId: orderId,
-      reason: returnReason,
-      otherReason: returnReason === 'Other' ? otherReason : null,
-      image: returnImage ? returnImage.name : 'No image',
-    };
-    alert(`Initiating Return for Order ${orderId}:\n\nDetails: ${JSON.stringify(returnDetails, null, 2)}\n\n(In a real application, this would send data to a backend API.)`);
-    handleCloseReturnModal();
+    try {
+      const requestData = {
+        orderId: order.id,
+        requestType: 'return',
+        reason: returnReason,
+        otherReason: returnReason === 'Other' ? otherReason : null,
+        userId: user.id,
+        selectedItemIds: selectedOrderItems,
+      };
+      
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/orders/request-action`, requestData);
+      
+      alert(response.data.message);
+      // Update order status locally from backend response
+      setOrder(prevOrder => ({ ...prevOrder, status: response.data.order.status }));
+      handleCloseReturnModal();
+    } catch (apiError) {
+      console.error('Error initiating return:', apiError);
+      alert('Failed to initiate return. Please try again.');
+    }
   };
 
-  const handleSubmitRefund = () => {
+  const handleSubmitExchange = async () => {
+    if (selectedOrderItems.length === 0) {
+      alert('Please select at least one item to exchange.');
+      return;
+    }
     if (!returnReason) {
-      alert('Please select a reason for refund.');
+      alert('Please select a reason for exchange.');
       return;
     }
     if (returnReason === 'Other' && !otherReason) {
@@ -100,13 +135,26 @@ const OrderDetails = () => {
       return;
     }
 
-    const refundDetails = {
-      orderId: orderId,
-      reason: returnReason,
-      otherReason: returnReason === 'Other' ? otherReason : null,
-    };
-    alert(`Initiating Refund for Order ${orderId}:\n\nDetails: ${JSON.stringify(refundDetails, null, 2)}\n\n(In a real application, this would send data to a backend API.)`);
-    handleCloseReturnModal();
+    try {
+      const requestData = {
+        orderId: order.id,
+        requestType: 'exchange',
+        reason: returnReason,
+        otherReason: returnReason === 'Other' ? otherReason : null,
+        userId: user.id,
+        selectedItemIds: selectedOrderItems,
+      };
+
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/orders/request-action`, requestData);
+
+      alert(response.data.message);
+      // Update order status locally from backend response
+      setOrder(prevOrder => ({ ...prevOrder, status: response.data.order.status }));
+      handleCloseReturnModal();
+    } catch (apiError) {
+      console.error('Error initiating exchange:', apiError);
+      alert('Failed to initiate exchange. Please try again.');
+    }
   };
 
   if (loading) {
@@ -121,7 +169,7 @@ const OrderDetails = () => {
     return (
       <div className="bg-white min-h-screen py-32 px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-3xl font-serif text-black mb-4">Error: {error}</h1>
-        <Link to="/orders" className="mt-4 inline-block text-blue-600 hover:underline">Back to My Orders</Link>
+        <Link to="/orders" className="mt-4 inline-block px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors">Back to My Orders</Link>
       </div>
     );
   }
@@ -131,7 +179,7 @@ const OrderDetails = () => {
       <div className="bg-white min-h-screen py-32 px-4 sm:px-6 lg:px-8 text-center">
         <h1 className="text-3xl font-serif text-black mb-4">Order Not Found</h1>
         <p className="text-gray-600">The order you are looking for does not exist.</p>
-        <Link to="/orders" className="mt-4 inline-block text-blue-600 hover:underline">Back to My Orders</Link>
+        <Link to="/orders" className="mt-4 inline-block px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors">Back to My Orders</Link>
       </div>
     );
   }
@@ -139,8 +187,11 @@ const OrderDetails = () => {
   const formattedOrderDate = new Date(order.order_date).toLocaleDateString();
   const formattedDeliveryDate = order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A';
 
+  // Determine if return/exchange buttons should be shown
+  const showActionButtons = order.status === 'Delivered' && (isRefundEligible(order.delivery_date) || isReturnEligible(order.delivery_date));
+
   return (
-    <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8">
+    <div className="bg-white min-h-screen pt-56 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-serif text-center text-black mb-12">Order Details: {order.id}</h1>
         <div className="border border-gray-200 rounded-lg p-6 mb-8">
@@ -155,14 +206,33 @@ const OrderDetails = () => {
                 order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
                 order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
                 order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                order.status === 'Return Initiated' ? 'bg-purple-100 text-purple-800' : // New status color
+                order.status === 'Exchange Initiated' ? 'bg-orange-100 text-orange-800' : // New status color
                 'bg-yellow-100 text-yellow-800'
               }`}>
               {order.status}
             </span>
           </div>
+
+          {/* Shipping Address */}
+          {order.shipping_address && (
+            <div className="mb-4 p-4 bg-gray-50 rounded-md">
+              <h3 className="font-semibold text-md text-gray-800 mb-2">Shipping Address</h3>
+              <p className="text-sm text-gray-600">{order.shipping_address.address}</p>
+              <p className="text-sm text-gray-600">{order.shipping_address.city}, {order.shipping_address.state} - {order.shipping_address.pincode}</p>
+              <p className="text-sm text-gray-600">{order.shipping_address.country}</p>
+            </div>
+          )}
+
           <div className="flex flex-col space-y-4 py-2 mb-4">
             {order.items.map((item) => (
-              <div key={item.product_id} className="flex items-center space-x-4">
+              <div key={item.id} className="flex items-center space-x-4">
+                <input
+                  type="checkbox"
+                  checked={selectedOrderItems.includes(item.id)}
+                  onChange={() => handleItemSelection(item.id)}
+                  className="h-4 w-4 text-stone-600 focus:ring-stone-500 border-stone-300 rounded"
+                />
                 <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md" />
                 <div>
                   <p className="text-lg font-semibold text-gray-800">{item.name}</p>
@@ -173,37 +243,70 @@ const OrderDetails = () => {
             ))}
           </div>
           <div className="text-right">
+            <p className="text-lg">Subtotal: ₹{(order.total_amount + (order.discount_amount || 0)).toFixed(2)}</p>
+            {order.discount_amount > 0 && (
+                <p className="text-lg text-green-600">Discount: -₹{order.discount_amount.toFixed(2)}</p>
+            )}
+            {order.coupon_code && (
+                <p className="text-lg text-green-600">Coupon: {order.coupon_code}</p>
+            )}
+            {order.coupon_code && (
+                <p className="text-lg text-green-600">Coupon: {order.coupon_code}</p>
+            )}
             <p className="font-semibold text-xl">Total: ₹{order.total_amount.toFixed(2)}</p>
             <div className="mt-4 space-x-4">
-              {order.status === 'Delivered' && isRefundEligible(order.delivery_date) && (
-                <button
-                  onClick={handleReturnExchange}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                >
-                  Initiate Refund
-                </button>
+              {showActionButtons && ( // Only show buttons if eligible and not already initiated
+                <>
+                  {isRefundEligible(order.delivery_date) && (
+                    <button
+                      onClick={handleReturnExchange}
+                      disabled={selectedOrderItems.length === 0}
+                      className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Initiate Return
+                    </button>
+                  )}
+                  {isReturnEligible(order.delivery_date) && (
+                    <button
+                      onClick={handleReturnExchange}
+                      disabled={selectedOrderItems.length === 0}
+                      className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Initiate Exchange
+                    </button>
+                  )}
+                </>
               )}
-              {order.status === 'Delivered' && isReturnEligible(order.delivery_date) && (
-                <button
-                  onClick={handleReturnExchange}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                >
-                  Initiate Return
-                </button>
-              )}
-              {order.status === 'Delivered' && !isRefundEligible(order.delivery_date) && !isReturnEligible(order.delivery_date) && (
+              {!showActionButtons && order.status === 'Delivered' && ( // Show window closed message if delivered but not eligible
                 <span className="text-sm text-gray-500">Return/Refund window closed.</span>
+              )}
+              {order.status === 'Return Initiated' && ( // Show status if return initiated
+                <span className="text-sm text-purple-800 font-semibold">Return Initiated</span>
+              )}
+              {order.status === 'Exchange Initiated' && ( // Show status if exchange initiated
+                <span className="text-sm text-orange-800 font-semibold">Exchange Initiated</span>
               )}
             </div>
           </div>
         </div>
-        <Link to="/orders" className="mt-4 inline-block text-blue-600 hover:underline">Back to My Orders</Link>
+        <Link to="/orders" className="mt-4 inline-block px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors">Back to My Orders</Link>
       </div>
 
       {showReturnModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center">
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Return / Refund for Order {order.id}</h2>
+            <h2 className="text-2xl font-bold mb-4">Return / Exchange for Order {order.id}</h2>
+            {selectedOrderItems.length > 0 && (
+              <div className="mb-4 p-4 bg-gray-50 rounded-md">
+                <h3 className="font-semibold text-md text-gray-800 mb-2">Selected Items:</h3>
+                <ul className="list-disc list-inside text-sm text-gray-600">
+                  {selectedOrderItems.map(itemId => {
+                    const item = order.items.find(i => i.id === itemId);
+                    return item ? <li key={itemId}>{item.name} (Qty: {item.quantity})</li> : null;
+                  })}
+                </ul>
+              </div>
+            )}
             <div className="mb-4">
               <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">Reason:</label>
               <select
@@ -237,36 +340,24 @@ const OrderDetails = () => {
               </div>
             )}
 
-            <div className="mb-4">
-              <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional):</label>
-              <input
-                type="file"
-                id="imageUpload"
-                name="imageUpload"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-500"
-              />
-            </div>
-
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCloseReturnModal}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="w-full px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSubmitRefund}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                Initiate Refund
-              </button>
-              <button
                 onClick={handleSubmitReturn}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full px-6 py-3 bg-white text-black rounded-lg hover:bg-black hover:text-white transition-colors"
               >
                 Initiate Return
+              </button>
+              <button
+                onClick={handleSubmitExchange}
+                className="w-full px-6 py-3 bg-white text-black rounded-lg hover:bg-black hover:text-white transition-colors"
+              >
+                Initiate Exchange
               </button>
             </div>
           </div>

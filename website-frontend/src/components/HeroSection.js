@@ -1,18 +1,37 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { products } from '../data/products';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const HeroSection = () => {
-  const featured = useMemo(() => products.slice(0, 4), []);
+  const [featured, setFeatured] = useState([]);
   const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/products');
+        setFeatured(response.data.slice(0, 4));
+      } catch (error) {
+        console.error('Error loading featured products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFeatured();
+  }, []);
+
+  useEffect(() => {
+    if (featured.length === 0) return;
     const id = setInterval(() => {
       setIndex((prev) => (prev + 1) % featured.length);
     }, 8000);
     return () => clearInterval(id);
   }, [featured.length]);
+
+  if (loading) return <div className="hero-loading">Loading...</div>;
+  if (featured.length === 0) return <div>No products available</div>;
 
   const product = featured[index];
 
@@ -36,7 +55,7 @@ const HeroSection = () => {
             className="order-2 lg:order-1"
           >
             <div className="relative w-full h-[50vh] md:h-[60vh] rounded-xl overflow-hidden border border-dwapor-soft-gray/20">
-              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
             </div>
           </motion.div>
 
@@ -53,7 +72,7 @@ const HeroSection = () => {
               {product.name}
             </h1>
             <p className="font-sans text-dwapor-beige text-lg leading-relaxed max-w-md mb-10">
-              {product.shortDescription}
+              {product.short_description}
             </p>
             <div className="flex space-x-4">
               <Link to={`/product/${product.id}`} className="bg-dwapor-amber text-dwapor-museum px-8 py-4 font-sans text-sm uppercase tracking-widest hover:bg-dwapor-gold transition-colors">

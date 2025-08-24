@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import Notification from '../components/Notification';
+import { AnimatePresence } from 'framer-motion';
 
 const Profile = () => {
   const { user, updateUserData, refreshUserData } = useAuth();
@@ -13,6 +15,11 @@ const Profile = () => {
     state: '',
     zipCode: '',
   });
+  const [notification, setNotification] = useState({ show: false, message: '' });
+
+  const showNotification = (message) => {
+    setNotification({ show: true, message });
+  };
 
   useEffect(() => {
     if (user) {
@@ -38,15 +45,23 @@ const Profile = () => {
     e.preventDefault();
     const result = await updateUserData(formData);
     if (result.success) {
-      alert('Profile updated successfully!');
+      showNotification('Profile updated successfully!');
       refreshUserData();
     } else {
-      alert(result.error || 'Failed to update profile');
+      showNotification(result.error || 'Failed to update profile');
     }
   };
 
   return (
-    <div className="bg-white min-h-screen py-32 px-4 sm:px-6 lg:px-8">
+    <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8">
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            onClose={() => setNotification({ show: false, message: '' })}
+          />
+        )}
+      </AnimatePresence>
       <div className="max-w-lg mx-auto">
         <h1 className="text-3xl font-serif text-center text-black mb-12">My Profile</h1>
         <form onSubmit={handleSubmit} className="space-y-6">

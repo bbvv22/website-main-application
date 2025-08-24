@@ -1,36 +1,87 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { products } from '../data/products';
+import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-import axios from 'axios';
-
 import ProductGallery from '../components/ProductGallery';
 import Reviews from '../components/Reviews';
+import { useAuth } from '../context/AuthContext';
 import Notification from '../components/Notification';
+import { getProductFeatures, getProductCare } from '../data/productData';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find(p => p.id === parseInt(id));
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');
+  const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notification, setNotification] = useState({ show: false, message: '' });
   const [showSizeGuide, setShowSizeGuide] = useState(false);
-
   const [reviews, setReviews] = useState([]);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:8000/api/products/${id}`);
+        setProduct(response.data);
+        setSelectedColor(response.data.colors?.[0] || '');
+        setSelectedSize('');
+      } catch (err) {
+        setError('Product not found');
+        console.error('Error loading product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      loadProduct();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const loadRelatedProducts = async () => {
+      if (!product) return;
+      
+      try {
+        const response = await axios.get('http://localhost:8000/api/products');
+        const related = response.data
+          .filter(p => p.category === product.category && p.id !== product.id)
+          .slice(0, 3);
+        setRelatedProducts(related);
+      } catch (error) {
+        console.error('Error loading related products:', error);
+      }
+    };
+
+    loadRelatedProducts();
+  }, [product]);
 
   const handleAddReview = async (review) => {
+    if (!user) {
+      alert('Please log in to submit a review.');
+      return;
+    }
     try {
       const response = await axios.post('http://localhost:8000/api/reviews', {
         ...review,
         product_id: product.id,
-        user_id: 'test_user_id' // Hardcoded for now
+        user_id: user.id,
       });
       setReviews([...reviews, response.data]);
+      showNotification('Review submitted successfully!');
     } catch (error) {
       console.error('Failed to submit review:', error);
+      showNotification('Failed to submit review: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -46,11 +97,8 @@ const ProductDetail = () => {
     { size: 'L', bust: 38, waist: 34, hip: 44 },
   ];
 
-  const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
-
   const showNotification = (message) => {
-  setNotification({ show: true, message });
+    setNotification({ show: true, message });
   };
 
   const handleAddToWishlist = () => {
@@ -73,7 +121,17 @@ const ProductDetail = () => {
     }
   }, [product]);
 
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-dwapor-museum flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="font-serif text-4xl text-dwapor-amber mb-4">Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-dwapor-museum flex items-center justify-center">
         <div className="text-center">
@@ -96,15 +154,7 @@ const ProductDetail = () => {
     showNotification(`Added ${quantity} x ${product.name} to cart!`);
   };
 
-  // urgency signals (mocked)
-  const lowStock = useMemo(() => Math.random() < 0.5 ? Math.floor(Math.random() * 4) + 1 : null, []);
-  const recentViews = useMemo(() => 8 + Math.floor(Math.random() * 12), []);
-
-  const relatedProducts = products.filter(p => p.id !== product.id).slice(0, 3);
-
-  const discount = product.price && product.discountedPrice
-    ? Math.round(((product.price - product.discountedPrice) / product.price) * 100)
-    : 0;
+  const discount = product.discount_percent;
 
   return (
     <div className="min-h-screen bg-dwapor-museum pt-48">
@@ -136,7 +186,7 @@ const ProductDetail = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <ProductGallery images={product.images} productName={product.name} />
+            <ProductGallery images={product.images || []} productName={product.name} />
           </motion.div>
 
           {/* Product Details (single column) */}
@@ -151,29 +201,21 @@ const ProductDetail = () => {
               <h1 className="font-serif text-4xl md:text-5xl text-dwapor-amber mb-4 font-light">
                 {product.name}
               </h1>
-              <div className="flex items-center space-x-4 mb-8">
-                {product && product.discountedPrice &&
-                  <p className="text-3xl font-bold text-gray-900">₹{product.discountedPrice.toLocaleString()}</p>
-                }
-                {product && product.price && (
-                  <p className="text-xl text-gray-500 line-through">₹{product.price.toLocaleString()}</p>
-                )}
-                {discount > 0 && (
-                  <div className="bg-dwapor-amber text-white text-sm font-semibold px-3 py-1 rounded-full">
-                    {discount}% OFF
-                  </div>
-                )}
-              </div>
-              <p className="text-dwapor-soft-gray text-lg leading-relaxed">
-                {product.shortDescription}
-              </p>
-              {/* urgency */}
-              <div className="flex flex-wrap gap-6 mt-6">
-                {lowStock && (
-                  <div className="text-red-500 text-sm">Only {lowStock} left in stock</div>
-                )}
-                <div className="text-dwapor-soft-gray text-sm">{recentViews} people viewed this item in the last hour</div>
-              </div>
+              {product.price && (
+                <div className="flex items-center space-x-4 mb-8">
+                  <p className="text-3xl font-bold text-gray-900">₹{product.price.toLocaleString()}</p>
+                  {product.is_on_sale && (
+                    <>
+                      <p className="text-xl text-gray-500 line-through">₹{product.original_price.toLocaleString()}</p>
+                      {product.discount_percent > 0 && (
+                        <div className="bg-dwapor-amber text-white text-sm font-semibold px-3 py-1 rounded-full">
+                          {product.discount_percent}% OFF
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Simplified Size Chart */}
@@ -210,7 +252,7 @@ const ProductDetail = () => {
                 Select Size
               </h3>
               <div className="flex flex-wrap gap-3">
-                {product.sizes.map((size) => (
+                {(product.sizes || []).map((size) => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
@@ -319,7 +361,7 @@ const ProductDetail = () => {
                 Features
               </h3>
               <div className="space-y-2">
-                {product.features.split(' • ').map((feature, index) => (
+                {getProductFeatures(product.name).map((feature, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <div className="w-1 h-1 bg-dwapor-gold rounded-full"></div>
                     <span className="text-dwapor-soft-gray text-sm">{feature}</span>
@@ -333,7 +375,7 @@ const ProductDetail = () => {
               <h3 className="font-sans text-dwapor-amber text-sm uppercase tracking-wider mb-4">
                 Care Instructions
               </h3>
-              <p className="text-dwapor-soft-gray text-sm">{product.care}</p>
+              <p className="text-dwapor-soft-gray text-sm whitespace-pre-line">{getProductCare(product.name)}</p>
             </div>
           </motion.div>
         </div>
@@ -415,7 +457,7 @@ const ProductDetail = () => {
             </h2>
             <div className="prose prose-lg max-w-none">
               <p className="text-dwapor-soft-gray leading-relaxed whitespace-pre-line">
-                {product.fullDescription}
+                {product.description}
               </p>
             </div>
             <Reviews product={{...product, reviews}} onAddReview={handleAddReview} />
@@ -442,7 +484,7 @@ const ProductDetail = () => {
                   >
                     <div className="relative h-64 overflow-hidden">
                       <img
-                        src={relatedProduct.images[0]}
+                        src={relatedProduct.images && relatedProduct.images.length > 0 ? relatedProduct.images[0] : 'placeholder.jpg'} // Added check and placeholder
                         alt={relatedProduct.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -452,7 +494,7 @@ const ProductDetail = () => {
                         {relatedProduct.name}
                       </h3>
                       <p className="text-dwapor-soft-gray text-sm mb-3">
-                        {relatedProduct.shortDescription}
+                        {relatedProduct.short_description}
                       </p>
                       <span className="text-dwapor-gold font-medium">
                         ₹{relatedProduct.price}

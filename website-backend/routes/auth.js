@@ -2,23 +2,31 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-const User = require('../models/user');
-const Otp = require('../models/otp');
-
-// Nodemailer transporter setup
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+const { User, Otp } = require('../models');
+const transporter = require('../utils/mailer');
 
 // Function to send OTP email
 async function sendOtpEmail(email, otp) {
-    console.log(`Mock OTP for ${email}: ${otp}`);
-    // Replace the actual email sending logic with a console log for testing purposes
+    const mailOptions = {
+        from: process.env.SMTP_USER,
+        to: email,
+        subject: 'Your OTP for Dwapor Verification',
+        html: `<div style="font-family: sans-serif; text-align: center; padding: 20px;">
+                 <h2>Welcome to Dwapor!</h2>
+                 <p>Thank you for signing up. Please use the following One-Time Password (OTP) to verify your email address.</p>
+                 <p style="font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 20px 0;">${otp}</p>
+                 <p>This OTP is valid for 10 minutes.</p>
+                 <p>If you did not request this, please ignore this email.</p>
+               </div>`,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ OTP email sent to ${email}`);
+    } catch (error) {
+        console.error(`❌ Error sending OTP email to ${email}:`, error);
+        throw new Error('Failed to send OTP email.'); // Propagate error to be caught by the route handler
+    }
 }
 
 
@@ -33,40 +41,65 @@ router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     console.log('📝 Signup request:', { username, email });
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      where: { email: email }
+    });
 
-    // Check if user already exists (registered but not verified)
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser && existingUser.isEmailVerified) {
-      return res.status(409).json({ message: 'User already exists and is verified' });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists with this email'
+      });
     }
 
-    // If user exists but not verified, we can update their password and resend OTP
-    if (existingUser && !existingUser.isEmailVerified) {
-      await existingUser.update({ password: hashedPassword });
-      // Proceed to send new OTP
+    // Rate Limiting Logic
+    const existingOtp = await Otp.findOne({ where: { email } });
+    if (existingOtp && existingOtp.sent_at) {
+        const now = new Date();
+        const lastSent = new Date(existingOtp.sent_at);
+        const secondsDiff = (now.getTime() - lastSent.getTime()) / 1000;
+        if (secondsDiff < 60) {
+            return res.status(429).json({ 
+                success: false, 
+                message: 'Please wait a minute before requesting another OTP.' 
+            });
+        }
     }
+
+    // Hash the password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Generate OTP
-    const otpCode = generateOTP();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const sent_at = new Date();
 
-    // Save OTP and temporary user details to database
-    await Otp.upsert({ email, otp: otpCode, expiresAt, username, password: hashedPassword }); // upsert will create or update
+    // Store OTP with hashed password and sent_at timestamp
+    await Otp.upsert({
+      email: email,
+      otp: otp,
+      username: username,
+      hashedPassword: hashedPassword,
+      expiresAt: expiresAt,
+      sent_at: sent_at
+    });
 
-    // Send OTP email (or log for testing)
-    await sendOtpEmail(email, otpCode);
-
-    console.log(`✅ OTP sent to ${email}`);
+    // Send OTP email
+    await sendOtpEmail(email, otp);
 
     res.status(200).json({
-      message: 'OTP sent successfully. Please verify your email.',
-      otpSent: true // Indicate to frontend that OTP was sent
+      success: true,
+      message: `OTP sent to ${email}`,
     });
+
   } catch (error) {
     console.error('❌ Signup error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error during signup'
+    });
   }
 });
 
@@ -114,50 +147,91 @@ router.post('/signin', async (req, res) => {
 });
 
 // Verify OTP route (simplified for testing)
+// routes/auth.js - Fix the verify-otp route
+
 router.post('/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
     console.log('🔐 OTP verification for:', email);
-    
-    // Find the OTP in the database
-    const storedOtp = await Otp.findOne({ where: { email, otp } });
 
-    if (!storedOtp) {
-      return res.status(400).json({ message: 'Invalid OTP' });
-    }
+    // Find OTP record
+    const otpRecord = await Otp.findOne({
+      where: {
+        email: email,
+        otp: otp
+      }
+    });
 
-    // Check if OTP has expired
-    if (new Date() > storedOtp.expiresAt) {
-      await Otp.destroy({ where: { email } }); // Clean up expired OTP
-      return res.status(400).json({ message: 'OTP has expired' });
-    }
-
-    // If OTP is valid, create the user (if not already created)
-    let user = await User.findOne({ where: { email } });
-    if (!user) {
-      // Retrieve username and password from the stored OTP record
-      const { username, password: hashedPassword } = storedOtp;
-
-      user = await User.create({
-        username,
-        email,
-        password: hashedPassword,
-        isEmailVerified: true,
+    if (!otpRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP or email'
       });
-    } else if (!user.isEmailVerified) {
-      // If user exists but is not verified, update their status
-      await user.update({ isEmailVerified: true });
     }
 
-    // Delete the OTP from the database
-    await Otp.destroy({ where: { email } });
+    // Check if OTP is expired
+    if (new Date() > otpRecord.expiresAt) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired'
+      });
+    }
 
-    console.log('✅ Email verified for:', email);
-    res.json({ message: 'Email verified successfully' });
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      where: { email: email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User already exists'
+      });
+    }
+
+    // Create user with hashed password from OTP record
+    const newUser = await User.create({
+      username: otpRecord.username,
+      email: otpRecord.email,
+      password: otpRecord.hashedPassword,  // ✅ KEY FIX: Use hashedPassword from OTP
+      isEmailVerified: true
+    });
+
+    // Clean up - remove OTP record after successful verification
+    await otpRecord.destroy();
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: newUser.id, 
+        email: newUser.email 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    console.log('✅ User created successfully:', newUser.email);
+
+    res.status(201).json({
+      success: true,
+      message: 'Account created successfully',
+      token: token,
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        isEmailVerified: newUser.isEmailVerified
+      }
+    });
+
   } catch (error) {
     console.error('❌ OTP verification error:', error);
-    res.status(500).json({ message: 'OTP verification failed' });
+    res.status(500).json({
+      success: false,
+      message: 'Server error during verification'
+    });
   }
 });
+
 
 module.exports = router;

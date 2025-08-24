@@ -71,10 +71,23 @@ const OrderSuccess = () => {
                     <span className="font-medium">Order ID:</span> {orderData.id}
                   </p>
                   <p className="text-dwapor-soft-gray">
-                    <span className="font-medium">Date:</span> {new Date(orderData.orderDate).toLocaleDateString()}
+                    <span className="font-medium">Date:</span> {new Date(orderData.order_date).toLocaleDateString()}
                   </p>
                   <p className="text-dwapor-soft-gray">
-                    <span className="font-medium">Total:</span> <span className="text-dwapor-gold font-medium">₹{orderData.total.toFixed(2)}</span>
+                    <span className="font-medium">Subtotal:</span> <span className="text-dwapor-gold font-medium">₹{(orderData.total_amount + (orderData.discount_amount || 0)).toFixed(2)}</span>
+                  </p>
+                  {orderData.discount_amount > 0 && (
+                    <p className="text-dwapor-soft-gray text-green-600">
+                      <span className="font-medium">Discount:</span> <span className="font-medium">-₹{orderData.discount_amount.toFixed(2)}</span>
+                    </p>
+                  )}
+                  {orderData.coupon_code && (
+                    <p className="text-dwapor-soft-gray text-green-600">
+                      <span className="font-medium">Coupon:</span> {orderData.coupon_code}
+                    </p>
+                  )}
+                  <p className="text-dwapor-soft-gray">
+                    <span className="font-medium">Total:</span> <span className="text-dwapor-gold font-medium">₹{orderData.total_amount.toFixed(2)}</span>
                   </p>
                   <p className="text-dwapor-soft-gray">
                     <span className="font-medium">Payment:</span> {orderData.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
@@ -86,14 +99,14 @@ const OrderSuccess = () => {
                 <h3 className="font-serif text-xl text-dwapor-amber mb-4">Shipping Address</h3>
                 <div className="text-dwapor-soft-gray text-sm space-y-1">
                   <p className="font-medium">
-                    {orderData.customerInfo.firstName} {orderData.customerInfo.lastName}
+                    {orderData.customer_info?.firstName} {orderData.customer_info?.lastName}
                   </p>
-                  <p>{orderData.shippingAddress.address}</p>
+                  <p>{orderData.shipping_address?.address}</p>
                   <p>
-                    {orderData.shippingAddress.city}, {orderData.shippingAddress.state}
+                    {orderData.shipping_address?.city}, {orderData.shipping_address?.state}
                   </p>
                   <p>
-                    {orderData.shippingAddress.pincode}, {orderData.shippingAddress.country}
+                    {orderData.shipping_address?.pincode}, {orderData.shipping_address?.country}
                   </p>
                 </div>
               </div>
@@ -105,13 +118,13 @@ const OrderSuccess = () => {
                 {orderData.items.map((item) => (
                   <div key={item.id} className="flex items-center space-x-3">
                     <img
-                      src={item.product.images[0]}
-                      alt={item.product.name}
+                      src={item.image}
+                      alt={item.name}
                       className="w-16 h-16 object-cover rounded"
                     />
                     <div className="flex-1">
                       <h4 className="font-serif text-dwapor-amber">
-                        {item.product.name}
+                        {item.name}
                       </h4>
                       <p className="text-dwapor-soft-gray text-sm">
                         Size: {item.size} | Color: {item.color} | Quantity: {item.quantity}

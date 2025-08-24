@@ -28,7 +28,7 @@ const Header = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.pathname]);
   const navigate = useNavigate();
-  const { getCartItemsCount } = useCart();
+  const { getTotalItems } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
   
   const navItems = ['Home', 'Collections', 'About'];
@@ -62,7 +62,7 @@ const Header = () => {
     }
   };
 
-  const cartItemsCount = getCartItemsCount();
+  const cartItemsCount = getTotalItems();
 
   return (
     <>
@@ -78,6 +78,8 @@ const Header = () => {
             <Link to="/">
               <Logo size="default" className="cursor-pointer" />
             </Link>
+
+            
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-12">

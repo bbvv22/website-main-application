@@ -1,101 +1,261 @@
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+/* ===== MODERN HERO SECTION - MATCHING REFERENCE ===== */
 
-/* .App {
-  text-align: left;
-} */
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+.hero-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background-color: #fefefe;
+  padding: 0;
+  margin: 0;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+.hero-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
+  align-items: center;
 }
 
-::-webkit-scrollbar-track {
-  background: #1a1a1a;
+/* Product Image Container */
+.hero-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 40px;
+  background-color: #fefefe;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #dcd3c1;
+.hero-product-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Content Area */
+.hero-content {
+  padding: 60px 40px 60px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: white;
+}
+
+.hero-text {
+  max-width: 400px;
+}
+
+.hero-collection-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 20px;
+  margin-top: 0;
+}
+
+.hero-product-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  font-weight: 300;
+  line-height: 1.1;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.02em;
+}
+
+.hero-product-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #555;
+  margin: 0 0 40px 0;
+  max-width: 350px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Modern Buttons - Matching Reference */
+.btn-primary {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 14px 32px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 2px solid #1a1a1a;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  background-color: #333;
+  border-color: #333;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #1a1a1a;
+  padding: 14px 32px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 2px solid #1a1a1a;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-secondary:hover {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+/* ===== MODERN PRODUCT GRID ===== */
+
+.collection-section {
+  padding: 120px 0;
+  background-color: white;
+}
+
+.collection-section .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.collection-section h2 {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #666;
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+.collection-section h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 300;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0 0 80px 0;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 60px 40px;
+}
+
+.product-card {
+  background: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+}
+
+.product-image {
+  margin-bottom: 20px;
+  overflow: hidden;
+  background-color: #f8f9fa;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #f5f2ed;
+.product-image img {
+  width: 100%;
+  height: 400px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
-/* Selection styles */
-::selection {
-  background: #dcd3c1;
+.product-card:hover .product-image img {
+  transform: scale(1.02);
+}
+
+.product-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 300;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.product-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+  margin: 0 0 12px 0;
+}
+
+.product-price {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
   color: #1a1a1a;
 }
 
-::-moz-selection {
-  background: #dcd3c1;
-  color: #1a1a1a;
-}
+/* ===== RESPONSIVE DESIGN ===== */
 
-/* Typography improvements */
-body {
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* Custom animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
+@media (max-width: 1024px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    max-width: 600px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .hero-content {
+    padding: 40px;
+    text-align: center;
+  }
+  
+  .hero-product-name {
+    font-size: 36px;
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out forwards;
-}
-
-/* Focus styles for accessibility */
-button:focus,
-input:focus,
-a:focus {
-  outline: 2px solid #dcd3c1;
-  outline-offset: 2px;
-}
-
-/* Image optimization */
-img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: optimize-contrast;
-}
-
-/* Prevent layout shift */
-img[src] {
-  display: block;
-}
-
-/* Custom utilities */
-.text-balance {
-  text-wrap: balance;
-}
-
-.backdrop-blur-18 {
-  backdrop-filter: blur(18px);
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 20px;
+  }
+  
+  .hero-product-name {
+    font-size: 28px;
+  }
+  
+  .hero-actions {
+    justify-content: center;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .products-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px 20px;
+  }
 }

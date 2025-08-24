@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { products } from '../data/products';
+import axios from 'axios';
 
 const Collections = () => {
-  const [activeFilter, setActiveFilter] = useState('tops');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('all');
 
   const categories = [
     { id: 'all', name: 'All' },
+    { id: 'tops', name: 'Tops' },
+    { id: 'blouses', name: 'Blouses' },
+    { id: 'dresses', name: 'Dresses' },
   ];
 
-  const filteredProducts = products;
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        let response;
+        if (activeFilter === 'all') {
+          response = await axios.get('http://localhost:8000/api/products');
+        } else {
+          response = await axios.get(`http://localhost:8000/api/products/category/${activeFilter}`);
+        }
+        setProducts(response.data);
+        console.log('Products data received:', response.data);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [activeFilter]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -34,6 +59,14 @@ const Collections = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="collections-loading">
+        <div className="loading-spinner">Loading collections...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-dwapor-museum pt-48 py-16 px-4 sm:px-6 lg:px-8">
@@ -87,7 +120,7 @@ const Collections = () => {
           animate="visible"
           key={activeFilter}
         >
-          {filteredProducts.map((product) => (
+          {products.map((product) => (
             <motion.div
               key={product.id}
               variants={itemVariants}
@@ -95,7 +128,7 @@ const Collections = () => {
               <Link to={`/product/${product.id}`} className="block">
                 <div className="overflow-hidden rounded-lg bg-dwapor-museum h-96">
                   <img 
-                    src={product.images[0]}
+                    src={product.image}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]"
                   />
@@ -106,10 +139,7 @@ const Collections = () => {
                   </h3>
                   <div className="flex items-center justify-between">
                     <span className="text-dwapor-amber font-sans text-lg font-medium">
-                      ₹{product.discountedPrice ? product.discountedPrice : product.price}
-                    </span>
-                    <span className="text-dwapor-soft-gray text-xs tracking-wider">
-                      {product.features.split(' • ')[0]}
+                      ₹{product.price.toLocaleString()}
                     </span>
                   </div>
                 </div>

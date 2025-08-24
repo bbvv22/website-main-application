@@ -13,6 +13,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const token = localStorage.getItem('dwapor-token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }, []);
+
   // Load user from localStorage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('dwapor-user');
@@ -67,19 +74,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axios.post(`${AUTH_API_URL}/signin`, { email, password });
-      const { token, userId } = response.data;
-
-      // In a real app, you'd decode the token or fetch user details
-      // For now, we'll create a mock user object from the response
-      const loggedInUser = {
-        id: userId,
-        email: email,
-        // You might want to fetch username from backend if available
-        name: email.split('@')[0],
-      };
-
-      setUser(loggedInUser);
-      return { success: true, user: loggedInUser };
+      const { token, user } = response.data;
+      const nameParts = user.username ? user.username.split(' ') : ['', ''];
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+      const userWithFullName = { ...user, firstName, lastName };
+      localStorage.setItem('dwapor-token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(userWithFullName);
+      return { success: true, user: userWithFullName };
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);
       return { success: false, error: error.response?.data?.error || 'Authentication failed' };
@@ -104,12 +107,22 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('dwapor-user');
     localStorage.removeItem('dwapor-cart'); // Clear cart on logout
+    localStorage.removeItem('dwapor-token');
+    delete axios.defaults.headers.common['Authorization'];
   };
 
   const verifyOtp = async (email, otp) => {
     try {
       const response = await axios.post(`${AUTH_API_URL}/verify-otp`, { email, otp });
-      return { success: true, message: response.data.message };
+      const { token, user } = response.data;
+      const nameParts = user.username ? user.username.split(' ') : ['', ''];
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+      const userWithFullName = { ...user, firstName, lastName };
+      localStorage.setItem('dwapor-token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(userWithFullName);
+      return { success: true, message: response.data.message, user: userWithFullName };
     } catch (error) {
       console.error('OTP verification error:', error.response?.data || error.message);
       return { success: false, error: error.response?.data?.message || 'OTP verification failed' };

@@ -1,51 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ProductCard from './ProductCard';
+import axios from 'axios';
 
 const CollectionSection = () => {
-  // Featured products (first 3 from your collection)
-  const featuredProducts = [
-    {
-      id: 6,
-      name: "Saffron",
-      description: "Mesmerizing burgundy crop top that embodies the essence of royal Indian craftsmanship.",
-      features: "Brocade Techniques • Gold Diamond Motifs • Princess Seams • Body Fit Top",
-      category: "tops",
-      images: [
-        "/products/product - 6.1.jpg",
-        "/products/product -6.2.jpg",
-        "/products/product-6.3.jpg",
-        "/products/product - 6.4.jpg"
-      ]
-    },
-    {
-      id: 1,
-      name: "Aurora",
-      description: "Captivating brocade peplum top that marries artisanal allure with modern elegance.",
-      features: "Hand-embroidered • Silk-blend Jacquard • Metallic Threadwork",
-      category: "blouses",
-      images: [
-        "/products/product-1.1.jpg",
-        "/products/product-1.2.jpg",
-        "/products/product-1.3.jpg"
-      ]
-    },
-    {
-      id: 2,
-      name: "Mirage",
-      description: "Paisley-print crop top that fuses artisanal heritage with contemporary flair.",
-      features: "Block-print Artistry • Cotton-silk Blend • V-neckline",
-      category: "bustiers",
-      images: [
-        "/products/product-2.1.jpg",
-        "/products/product-2.2.jpg",
-        "/products/product-2.3.jpg",
-        "/products/product-2.4.jpg",
-        "/products/product-2.5.jpg"
-      ]
-    }
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/products');
+        setFeaturedProducts(response.data.slice(0, 3)); // Show first 3 products
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -65,6 +41,10 @@ const CollectionSection = () => {
       transition: { duration: 0.8, ease: "easeOut" }
     }
   };
+
+  if (loading) {
+    return <div className="loading">Loading featured products...</div>;
+  }
 
   return (
     <section className="py-30 bg-dwapor-museum">
@@ -100,7 +80,7 @@ const CollectionSection = () => {
               key={product.id}
               variants={itemVariants}
             >
-              <ProductCard product={product} featured={index === 0} />
+              <ProductCard product={product} featured={index === 0} showDescription={false} showPrice={false} />
             </motion.div>
           ))}
         </motion.div>

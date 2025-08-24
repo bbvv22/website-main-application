@@ -1,31 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; // Added
+import Notification from '../components/Notification';
+import { AnimatePresence } from 'framer-motion';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true); // Added loading state
+  const [error, setError] = useState(null); // Added error state
+  const [notification, setNotification] = useState({ show: false, message: '' }); // Added notification state
+  const showNotification = (message) => {
+    setNotification({ show: true, message });
+  };
+  const { user, isAuthenticated } = useAuth(); // Get user and isAuthenticated
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!isAuthenticated || !user?.id) { // Check if user is authenticated
+        setLoading(false);
+        setError('Please log in to view your orders.');
+        return;
+      }
+
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders`);
+        setLoading(true);
+        setError(null);
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders/${user.id}`); // Added userId
         setOrders(response.data);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to fetch orders. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchOrders();
-  }, []);
+  }, [isAuthenticated, user]); // Depend on isAuthenticated and user
 
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [returnReason, setReturnReason] = useState(''); // Added
+  const [otherReason, setOtherReason] = useState(''); // Added
+  // const [returnImage, setReturnImage] = useState(null); // Removed image upload functionality
 
   const handleCancelOrder = (orderId) => {
     if (window.confirm(`Are you sure you want to cancel order ${orderId}?`)) {
       setOrders(orders.map(order =>
         order.id === orderId ? { ...order, status: 'Cancelled' } : order
       ));
-      alert(`Order ${orderId} has been cancelled.`);
+      showNotification(`Order ${orderId} has been cancelled.`);
     }
   };
 
@@ -46,7 +70,7 @@ const Orders = () => {
     setSelectedOrderId(null);
     setReturnReason('');
     setOtherReason('');
-    setReturnImage(null);
+    // setReturnImage(null); // Removed image upload functionality
   };
 
   const handleReturnReasonChange = (e) => {
@@ -56,11 +80,11 @@ const Orders = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setReturnImage(e.target.files[0]);
-    }
-  };
+  // const handleImageChange = (e) => { // Removed image upload functionality
+  //   if (e.target.files && e.target.files[0]) {
+  //     setReturnImage(e.target.files[0]);
+  //   }
+  // };
 
   const handleSubmitReturn = () => {
     if (!returnReason) {
@@ -76,9 +100,9 @@ const Orders = () => {
       orderId: selectedOrderId,
       reason: returnReason,
       otherReason: returnReason === 'Other' ? otherReason : null,
-      image: returnImage ? returnImage.name : 'No image',
+      // image: returnImage ? returnImage.name : 'No image', // Removed image upload functionality
     };
-    alert(`Initiating Return for Order ${selectedOrderId}:\n\nDetails: ${JSON.stringify(returnDetails, null, 2)}\n\n(In a real application, this would send data to a backend API.)`);
+    showNotification(`Initiating Return for Order ${selectedOrderId}:\n\nDetails: ${JSON.stringify(returnDetails, null, 2)}`);
     handleCloseReturnModal();
   };
 
@@ -96,67 +120,77 @@ const Orders = () => {
       orderId: selectedOrderId,
       reason: returnReason,
       otherReason: returnReason === 'Other' ? otherReason : null,
-      image: returnImage ? returnImage.name : 'No image',
+      // image: returnImage ? returnImage.name : 'No image', // Removed image upload functionality
     };
-    alert(`Initiating Exchange for Order ${selectedOrderId}:\n\nDetails: ${JSON.stringify(exchangeDetails, null, 2)}\n\n(In a real application, this would send data to a backend API.)`);
+    showNotification(`Initiating Exchange for Order ${selectedOrderId}:\n\nDetails: ${JSON.stringify(exchangeDetails, null, 2)}`);
     handleCloseReturnModal();
   };
 
+  if (loading) {
+    return (
+      <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-3xl font-serif text-black mb-4">Loading Orders...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8 text-center">
+        <h1 className="text-3xl font-serif text-black mb-4">Error: {error}</h1>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white min-h-screen pt-48 px-4 sm:px-6 lg:px-8">
+      <AnimatePresence>
+        {notification.show && (
+          <Notification
+            message={notification.message}
+            onClose={() => setNotification({ show: false, message: '' })}
+          />
+        )}
+      </AnimatePresence>
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-serif text-center text-black mb-12">My Orders</h1>
         <div className="space-y-8">
-          {orders.map((order) => (
-            <div key={order.id} className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="font-bold text-lg">Order {order.id}</h2>
-                  <p className="text-sm text-gray-500">Placed on {order.date}</p>
+          {orders.length === 0 ? (
+            <div className="text-center text-gray-600">No orders found.</div>
+          ) : (
+            orders.map((order) => (
+              <div key={order.id} className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h2 className="font-bold text-lg">Order {order.id}</h2>
+                    <p className="text-sm text-gray-500">Placed on {new Date(order.order_date).toLocaleDateString()}</p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 text-sm rounded-full ${ 
+                      order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                      order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                    {order.status}
+                  </span>
                 </div>
-                <span
-                  className={`px-3 py-1 text-sm rounded-full ${
-                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                  {order.status}
-                </span>
-              </div>
-              <div className="flex space-x-4 overflow-x-auto py-2">
-                {order.items.map((item, index) => (
-                  <img key={index} src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md" />
-                ))}
-              </div>
-              <div className="text-right mt-4">
-                <p className="font-semibold">Total: {order.total}</p>
-                <Link to={`/orders/${order.id}`}
-                  className="mt-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
-                >
-                  View Details
-                </Link>
-                {order.status !== 'Shipped' && order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-                  <button
-                    onClick={() => handleCancelOrder(order.id)}
-                    className="mt-2 ml-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                <div className="flex space-x-4 overflow-x-auto py-2">
+                  {order.items.map((item, index) => (
+                    <img key={index} src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md" />
+                  ))}
+                </div>
+                <div className="text-right mt-4">
+                  <Link to={`/orders/${order.id}`}
+                    className="mt-2 px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"
                   >
-                    Cancel Order
-                  </button>
-                )}
-                {order.status === 'Delivered' && isReturnEligible(order.date) ? (
-                  <button
-                    onClick={() => handleReturnExchange(order.id)}
-                    className="mt-2 ml-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                  >
-                    Return / Exchange
-                  </button>
-                ) : order.status === 'Delivered' && !isReturnEligible(order.date) && (
-                  <span className="mt-2 ml-4 text-sm text-gray-500">Order is not under the return timeline.</span>
-                )}
+                    View Details
+                  </Link>
+                  {/* Removed Return / Exchange button from here */}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -169,7 +203,7 @@ const Orders = () => {
               <select
                 id="reason"
                 name="reason"
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:focus:border-indigo-500 sm:text-sm rounded-md"
                 value={returnReason}
                 onChange={handleReturnReasonChange}
               >
@@ -190,41 +224,29 @@ const Orders = () => {
                   id="otherReason"
                   name="otherReason"
                   rows="3"
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                  className="shadow-sm focus:ring-indigo-500 focus:focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
                   value={otherReason}
                   onChange={(e) => setOtherReason(e.target.value)}
                 ></textarea>
               </div>
             )}
 
-            <div className="mb-4">
-              <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-2">Upload Image (Optional):</label>
-              <input
-                type="file"
-                id="imageUpload"
-                name="imageUpload"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-500"
-              />
-            </div>
-
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleCloseReturnModal}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitReturn}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
               >
                 Initiate Return
               </button>
               <button
                 onClick={handleSubmitExchange}
-                className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                className="px-6 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
               >
                 Initiate Exchange
               </button>
