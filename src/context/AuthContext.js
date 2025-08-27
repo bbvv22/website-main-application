@@ -2,8 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios'; // Import axios
 
 // Define your API base URL
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.dwapor.com';
+const AUTH_API_URL = process.env.REACT_APP_AUTH_API_URL || 'https://api.dwapor.com/api/auth';
+
 
 // Auth Context
 const AuthContext = createContext();

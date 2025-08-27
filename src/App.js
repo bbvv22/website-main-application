@@ -1,3 +1,6 @@
+console.log("🔍 API BASE URL:", process.env.REACT_APP_API_BASE_URL);
+console.log("🔍 AUTH API URL:", process.env.REACT_APP_AUTH_API_URL);
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
@@ -175,4 +178,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;console.log("🔍 API BASE URL:", process.env.REACT_APP_API_BASE_URL);
