@@ -50,6 +50,7 @@ const Checkout = () => {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [isFormPrefilled, setIsFormPrefilled] = useState(false);
 
   const { cartItems, clearCart, getTotalPrice, getTotalItems, discount, couponCode } = useCart();
   const { user, isAuthenticated, updateUserData, refreshUserData } = useAuth();
@@ -77,11 +78,11 @@ const Checkout = () => {
     if (user) {
       refreshUserData();
     }
-  }, [user]); // Run when user object changes
+  }, []); // Run only once when component mounts
 
   // ✅ Pre-fill form with user data
   useEffect(() => {
-    if (user) {
+    if (user && !isFormPrefilled) {
       console.log('👤 Pre-filling form with user data:', user);
       setFormData((prev) => ({
         ...prev,
@@ -105,8 +106,9 @@ const Checkout = () => {
         billingPincode: user.billingZipCode || (prev.sameAsShipping ? (user.zipCode || '') : ''),
         billingCountry: 'India',
       }));
+      setIsFormPrefilled(true);
     }
-  }, [user]);
+  }, [user, isFormPrefilled]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
