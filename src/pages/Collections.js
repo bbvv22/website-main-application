@@ -23,13 +23,22 @@ const Collections = () => {
         } else {
           response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/products/category/${activeFilter}`);
         }
-        let sortedProducts = response.data;
-        // Find RANI and move it to the front
-        const raniIndex = sortedProducts.findIndex(p => p.name === 'RANI');
-        if (raniIndex > -1) {
-          const raniProduct = sortedProducts.splice(raniIndex, 1)[0];
-          sortedProducts.unshift(raniProduct);
-        }
+                                const desiredOrder = ["JIYA", "Beige Blossom Peplum Top", "RANI"];
+        let sortedProducts = response.data.sort((a, b) => {
+          const aIndex = desiredOrder.indexOf(a.name);
+          const bIndex = desiredOrder.indexOf(b.name);
+
+          if (aIndex > -1 && bIndex > -1) {
+            return aIndex - bIndex;
+          }
+          if (aIndex > -1) {
+            return -1;
+          }
+          if (bIndex > -1) {
+            return 1;
+          }
+          return 0;
+        });
         setProducts(sortedProducts);
         console.log('Products data received:', sortedProducts);
       } catch (error) {
@@ -123,7 +132,7 @@ const Collections = () => {
 
         {/* Products Grid - clean cards with info below */}
         <motion.div
-          className="grid grid-cols-2 md:grid-cols-2 gap-12"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

@@ -45,7 +45,7 @@ const TermsOfService = () => {
           className="font-sans text-dwapor-soft-gray text-lg leading-relaxed mb-8"
           variants={itemVariants}
         >
-          Last Updated: [Insert Date]
+          Last Updated: 03/03/2025
         </motion.p>
 
         <motion.p
@@ -150,7 +150,6 @@ const TermsOfService = () => {
           <li>Credit/Debit Cards (Visa, MasterCard, etc.)</li>
           <li>UPI (Google Pay, PhonePe, etc.)</li>
           <li>Digital Wallets (Paytm, Mobikwik, etc.)</li>
-          <li>Cash on Delivery (COD)</li>
         </motion.ul>
         <motion.p
           className="font-sans text-dwapor-soft-gray text-lg leading-relaxed mb-4"
@@ -373,7 +372,7 @@ const TermsOfService = () => {
           <br />
           Dwapor Customer Support
           <br />
-          support@dwapor.com
+          team.dwapor@gmail.com
         </motion.p>
       </motion.div>
     </div>

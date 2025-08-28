@@ -88,9 +88,12 @@ const Orders = () => {
                   </span>
                 </div>
                 <div className="flex space-x-4 overflow-x-auto py-2">
-                  {order.items.map((item, index) => (
-                    <img key={index} src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md" />
-                  ))}
+                  {order.items.map((item, index) => {
+                    const imageUrl = item.image || (item.product && item.product.images && item.product.images.length > 0 ? item.product.images[0].image_url : '/placeholder.jpg');
+                    return (
+                      <img key={index} src={imageUrl} alt={item.name} className="w-20 h-20 object-cover rounded-md" />
+                    );
+                  })}
                 </div>
                 <div className="text-right mt-4">
                   <Link to={`/orders/${order.id}`}

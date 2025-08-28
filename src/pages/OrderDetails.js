@@ -120,12 +120,13 @@ const OrderDetails = () => {
     try {
       const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/orders/single/${orderId}`);
       const orderData = response.data;
-      // Simulate status for existing orders
-      orderData.items.forEach(item => {
-        if (!item.status) {
-          item.status = 'delivered';
-        }
-      });
+      if (orderData.status.toLowerCase() === 'delivered') {
+        orderData.items.forEach(item => {
+          if (!item.status) {
+            item.status = 'delivered';
+          }
+        });
+      }
       setOrder(orderData);
       console.log('Order data received by frontend:', orderData);
     } catch (err) {
@@ -201,14 +202,14 @@ const OrderDetails = () => {
                 <h2 className="font-serif text-3xl text-dwapor-amber mb-6">Status</h2>
                 <div className="flex items-center space-x-3">
                   <span className={`px-4 py-2 text-sm rounded-full font-medium ${
-                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                    order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                    order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                    order.status.toLowerCase() === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                    order.status.toLowerCase() === 'delivered' ? 'bg-green-100 text-green-800' :
+                    order.status.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-800' :
                     'bg-yellow-100 text-yellow-800'
                   }`}>
                     {order.status}
                   </span>
-                  {(order.status === 'pending' || order.status === 'confirmed') && (
+                  {(order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'confirmed') && (
                     <button
                       onClick={handleCancelOrder}
                       className="ml-4 px-4 py-2 text-sm rounded-full font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
@@ -219,10 +220,10 @@ const OrderDetails = () => {
                   <div className="font-sans text-dwapor-soft-gray">
                     <p>Ordered on: {formattedOrderDate}</p>
                     <p>Delivered on: {formattedDeliveryDate}</p>
-                    {order.status === 'cancel_requested' && (
+                    {order.status.toLowerCase() === 'cancel_requested' && (
                       <p>Cancellation Requested on: {new Date(order.updatedAt).toLocaleDateString()}</p>
                     )}
-                    {order.status === 'Order cancelled' && (
+                    {order.status.toLowerCase() === 'order cancelled' && (
                       <p>Order Cancelled on: {new Date(order.updatedAt).toLocaleDateString()}</p>
                     )}
                   </div>
@@ -232,7 +233,7 @@ const OrderDetails = () => {
               <div className="bg-white rounded-lg shadow-sm p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="font-serif text-3xl text-dwapor-amber">Items</h2>
-                  {order.status === 'Delivered' && !isReturnMode && (
+                  {order.status.toLowerCase() === 'delivered' && !isReturnMode && (
                     <button
                       onClick={() => setIsReturnMode(true)}
                       className="px-6 py-3 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-50 transition-colors"
@@ -242,10 +243,14 @@ const OrderDetails = () => {
                   )}
                 </div>
                 <div className="space-y-6">
-                  {order.items && order.items.map((item) => (
+                  {order.items && order.items.map((item) => { console.log('Item in map:', JSON.stringify(item, null, 2)); return (
                     <div key={item.id} className={`p-4 rounded-lg ${selectedItems[item.id] ? 'bg-gray-100' : ''}`}>
                       <div className="flex items-center space-x-6">
-                        <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg" />
+                        <img 
+                          src={item.image || (item.product && item.product.images && item.product.images.length > 0 ? item.product.images[0].image_url : '/placeholder.jpg')}
+                          alt={item.name} 
+                          className="w-24 h-24 object-cover rounded-lg" 
+                        />
                         <div>
                           <p className="font-sans text-lg font-medium text-dwapor-parchment">{item.name}</p>
                           <p className="font-sans text-dwapor-soft-gray">Quantity: {item.quantity}</p>
@@ -262,7 +267,7 @@ const OrderDetails = () => {
                         </div>
                       </div>
                       {console.log('Item status for', item.name, ':', item.status)}
-                      {isReturnMode && item.status && (item.status.toLowerCase() === 'delivered' || item.status.toLowerCase() === 'confirmed') && (
+                      {isReturnMode && order.status.toLowerCase() === 'delivered' && (
                         <div className="mt-4">
                           <div className="flex items-center space-x-4">
                             <label className="flex items-center">
@@ -309,7 +314,7 @@ const OrderDetails = () => {
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             </div>
@@ -350,6 +355,24 @@ const OrderDetails = () => {
                     <span>Total:</span>
                     <span>₹{order.total_amount.toFixed(2)}</span>
                   </div>
+                  {order.payment_method && (
+                    <div className="flex justify-between">
+                      <span>Payment Method:</span>
+                      <span>{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</span>
+                    </div>
+                  )}
+                  {order.payment_status && (
+                    <div className="flex justify-between">
+                      <span>Payment Status:</span>
+                      <span>{order.payment_status}</span>
+                    </div>
+                  )}
+                  {order.payment_id && (
+                    <div className="flex justify-between text-sm">
+                      <span>Payment ID:</span>
+                      <span className="break-all">{order.payment_id}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -23,6 +23,7 @@ const Footer = () => {
     switch (linkText) {
       case 'Size Guide': return '/size-guide';
       case 'About Us': return '/about';
+      case 'Careers': return '/careers';
       case 'Contact Us': return '/contact';
       case 'FAQ': return '/faq';
       case 'Privacy Policy': return '/privacy-policy';
@@ -34,7 +35,7 @@ const Footer = () => {
   };
 
   const footerLinks = {
-    support: ['Size Guide', 'About Us', 'Contact Us', 'FAQ'],
+    support: ['Size Guide', 'Careers', 'Contact Us', 'FAQ'],
     policies: ['Privacy Policy', 'Shipping and Delivery Policy', 'Return and Exchange Policy', 'Terms of Service'],
   };
 

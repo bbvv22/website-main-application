@@ -17,20 +17,16 @@ const ProductCard = ({ product, featured = false, showDescription = true, showPr
       className="group relative overflow-hidden flex flex-col h-full bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300"
       whileHover={{ y: -5 }}
     >
-      <div className="relative w-full h-80 overflow-hidden">
+      <div className="relative w-full aspect-w-1 aspect-h-1 overflow-hidden">
         <img
           src={product.image} // Changed from product.images[currentImageIndex]
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 group-hover:opacity-75"
         />
 
         {/* Removed product.images.length > 1 conditional rendering block */}
 
-        {discount > 0 && (
-          <div className="absolute top-3 right-3 bg-dwapor-amber text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-            {discount}% OFF
-          </div>
-        )}
+        
       </div>
 
       <div className="p-4 flex flex-col flex-grow">

@@ -30,6 +30,7 @@ import TermsOfService from './pages/TermsOfService';
 import ContactUs from './pages/ContactUs';
 import SizeGuide from './pages/SizeGuide';
 import Address from './pages/Address'; // Import Address component
+import Careers from './pages/Careers';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import './App.css';
@@ -153,6 +154,11 @@ function AnimatedRoutes() {
           <Route path="/address" element={
             <Layout>
               <Address />
+            </Layout>
+          } />
+          <Route path="/careers" element={
+            <Layout>
+              <Careers />
             </Layout>
           } />
         </Routes>

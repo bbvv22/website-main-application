@@ -5,6 +5,21 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
+// Function to load Razorpay script
+const loadRazorpay = (src) => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+
 const Checkout = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -27,12 +42,14 @@ const Checkout = () => {
     billingPincode: '',
     billingCountry: 'India',
     // Payment
-    paymentMethod: 'cod'
+    paymentMethod: 'online'
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const { cartItems, clearCart, getTotalPrice, getTotalItems, discount, couponCode } = useCart();
   const { user, isAuthenticated, updateUserData, refreshUserData } = useAuth();
@@ -57,10 +74,10 @@ const Checkout = () => {
 
   // ✅ Force refresh user data when checkout loads
   useEffect(() => {
-    if (user && user.id) {
+    if (user) {
       refreshUserData();
     }
-  }, [user?.id]); // Run once when component mounts
+  }, [user]); // Run when user object changes
 
   // ✅ Pre-fill form with user data
   useEffect(() => {
@@ -89,21 +106,7 @@ const Checkout = () => {
         billingCountry: 'India',
       }));
     }
-  }, [
-    // ✅ Depend on ALL user fields that should trigger re-population
-    user?.firstName, 
-    user?.lastName, 
-    user?.email, 
-    user?.phone,
-    user?.streetAddress, 
-    user?.city, 
-    user?.state, 
-    user?.zipCode,
-    user?.billingAddress,
-    user?.billingCity,
-    user?.billingState,
-    user?.billingZipCode
-  ]);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -188,76 +191,156 @@ const Checkout = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('handleSubmit called');
-    if (!validateStep(currentStep)) {
-      console.log('Validation failed for current step');
-      return;
-    }
-    console.log('Validation passed for current step');
+  e.preventDefault();
+  
+  if (!validateStep(currentStep)) return;
+  
+  setLoading(true);
+  setPaymentError('');
+  
+  try {
+    // Save user data first
+    await updateUserData(formData);
+    
+    await processOnlinePayment();
+    
+  } catch (error) {
+    console.error('Order processing error:', error);
+    setErrors({ submit: error.message || 'Order processing failed' });
+    setPaymentError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-    try {
-      // Save user details
-      console.log('Attempting to update user data...');
-      await updateUserData(formData);
-      console.log('User data updated successfully.');
-
-      // Create order data
-      const orderData = {
+// 🆕 PROCESS ONLINE PAYMENT
+const processOnlinePayment = async () => {
+  try {
+    setPaymentLoading(true);
+    
+    // Step 1: Create Razorpay order
+    console.log('Creating payment order...');
+    console.log('Items being sent to backend:', cartItems); // Added log
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_BASE_URL}/orders/create-payment-order`,
+      {
         userId: user.id,
         items: cartItems,
-        total: getTotalPrice(),
-        discount: discount,
         couponCode: couponCode,
-        customerInfo: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone
-        },
-        shippingAddress: {
-          address: formData.shippingAddress,
-          city: formData.shippingCity,
-          state: formData.shippingState,
-          pincode: formData.shippingPincode,
-          country: formData.shippingCountry
-        },
-        billingAddress: formData.sameAsShipping ? {
-          address: formData.shippingAddress,
-          city: formData.shippingCity,
-          state: formData.shippingState,
-          pincode: formData.shippingPincode,
-          country: formData.shippingCountry
-        } : {
-          address: formData.billingAddress,
-          city: formData.billingCity,
-          state: formData.billingState,
-          pincode: formData.billingPincode,
-          country: formData.billingCountry
-        },
-        paymentMethod: formData.paymentMethod,
-        orderDate: new Date().toISOString(),
-        status: 'confirmed'
-      };
-      console.log('Order data constructed:', orderData);
-
-      // Send order to backend
-      console.log('Attempting to send order data to backend...');
-      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/orders`, orderData);
-      console.log('Order placed successfully:', response.data);
-
-      // Clear cart and navigate to success page
-      setOrderPlaced(true);
-      clearCart();
-      navigate('/order-success', { state: { orderData: response.data } });
-    } catch (error) {
-      console.error('Error in handleSubmit:', error);
-      setErrors({ submit: 'Order processing failed. Please try again.' });
-    } finally {
-      setLoading(false);
+        discount: discount
+      }
+    );
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error);
     }
-  };
+    
+    const { razorpayOrderId, amount } = response.data;
+    
+    // Step 2: Open Razorpay Checkout
+    const options = {
+      key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+      amount: amount * 100, // Convert to paise
+      currency: 'INR',
+      name: 'DWAPOR',
+      description: 'Premium Fashion Collection',
+      order_id: razorpayOrderId,
+      handler: async (paymentResponse) => {
+        // Payment successful - verify it
+        await verifyPaymentAndCreateOrder(paymentResponse);
+      },
+      prefill: {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        contact: formData.phone
+      },
+      theme: {
+        color: '#1a1a1a'
+      },
+      modal: {
+        ondismiss: () => {
+          setPaymentLoading(false);
+          setLoading(false);
+          setPaymentError('Payment was cancelled');
+        }
+      }
+    };
+    
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+    
+  } catch (error) {
+    setPaymentLoading(false);
+    throw error;
+  }
+};
+
+// 🆕 VERIFY PAYMENT
+const verifyPaymentAndCreateOrder = async (paymentResponse) => {
+  try {
+    const orderData = {
+      userId: user.id,
+      items: cartItems,
+      total: getTotalPrice(),
+      discount: discount,
+      couponCode: couponCode,
+      customerInfo: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone
+      },
+      shippingAddress: {
+        address: formData.shippingAddress,
+        city: formData.shippingCity,
+        state: formData.shippingState,
+        pincode: formData.shippingPincode,
+        country: formData.shippingCountry
+      },
+      billingAddress: formData.sameAsShipping ? {
+        address: formData.shippingAddress,
+        city: formData.shippingCity,
+        state: formData.shippingState,
+        pincode: formData.shippingPincode,
+        country: formData.shippingCountry
+      } : {
+        address: formData.billingAddress,
+        city: formData.billingCity,
+        state: formData.billingState,
+        pincode: formData.billingPincode,
+        country: formData.billingCountry
+      }
+    };
+    
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_BASE_URL}/orders/verify-payment`,
+      {
+        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+        razorpay_order_id: paymentResponse.razorpay_order_id,
+        razorpay_signature: paymentResponse.razorpay_signature,
+        orderData: orderData
+      }
+    );
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error);
+    }
+    
+    // Success!
+    setOrderPlaced(true);
+    clearCart();
+    console.log('Order data before navigation:', response.data.order); // Added log
+    navigate('/order-success', {
+      state: { orderData: response.data.order }
+    });
+    
+  } catch (error) {
+    setPaymentLoading(false);
+    throw new Error('Payment verification failed');
+  }
+};
+
+
 
   if (!isAuthenticated || cartItems.length === 0) {
     return null; // Will redirect via useEffect
@@ -565,67 +648,33 @@ const Checkout = () => {
 
                 {/* Step 3: Payment & Review */}
                 {currentStep === 3 && (
-                  <div>
-                    <h2 className="text-2xl font-bold text-stone-900 mb-6">Payment & Review</h2>
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-semibold mb-4">Choose Payment Method</h3>
                     
-                    {/* Payment Method */}
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-stone-800 mb-4">Payment Method</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="cod"
-                            checked={formData.paymentMethod === 'cod'}
-                            onChange={handleChange}
-                            className="h-4 w-4 text-stone-600 focus:ring-stone-500 border-stone-300"
-                          />
-                          <label className="ml-2 block text-sm text-stone-700">
-                            Cash on Delivery (COD)
-                          </label>
-                        </div>
-                        <div className="flex items-center opacity-50 cursor-not-allowed">
-                          <input
-                            type="radio"
-                            name="paymentMethod"
-                            value="online"
-                            checked={false}
-                            disabled
-                            className="h-4 w-4 text-stone-600 focus:ring-stone-500 border-stone-300"
-                          />
-                          <label className="ml-2 block text-sm text-stone-700">
-                            Online Payments <span className="text-xs text-stone-500">(Coming Soon)</span>
-                          </label>
-                        </div>
+                    {paymentError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        {paymentError}
                       </div>
-                    </div>
-
-                    {/* Order Review */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-stone-800 mb-4">Order Review</h3>
-                      <div className="bg-stone-50 rounded-lg p-4 mb-6">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span>Subtotal ({getTotalItems()} items)</span>
-                            <span>₹{calculatedSubtotal.toLocaleString()}</span>
-                          </div>
-                          {discount > 0 && (
-                            <div className="flex justify-between text-green-600">
-                              <span>Discount</span>
-                              <span>-₹{discount.toLocaleString()}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between">
-                            <span>Shipping</span>
-                            <span>Free</span>
-                          </div>
-                          <div className="border-t pt-2 flex justify-between font-semibold text-lg">
-                            <span>Total</span>
-                            <span>₹{getTotalPrice().toLocaleString()}</span>
-                          </div>
+                    )}
+                    
+                    <div className="space-y-4">
+                      {/* Online Payment */}
+                      <label className="flex items-center space-x-4 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="online"
+                          checked={formData.paymentMethod === 'online'}
+                          onChange={handleChange}
+                          className="w-5 h-5"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">Online Payment</div>
+                          <div className="text-sm text-gray-500">Cards, UPI, Net Banking, Wallets</div>
+                          <div className="text-xs text-green-600 mt-1">✓ Instant Confirmation</div>
                         </div>
-                      </div>
+                        <div className="font-semibold text-blue-600">Razorpay</div>
+                      </label>
                     </div>
                   </div>
                 )}
@@ -654,14 +703,23 @@ const Checkout = () => {
                     ) : (
                       <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || paymentLoading}
                         className="px-8 py-3 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {loading ? 'Processing...' : 'Place Order'}
+                        {loading || paymentLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <span>Pay Now</span>
+                        )}
                       </button>
                     )}
                   </div>
                 </div>
+
+                
 
                 {/* ✅ Error Display */}
                 {errors.submit && (

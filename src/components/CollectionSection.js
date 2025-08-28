@@ -47,7 +47,7 @@ const CollectionSection = () => {
   }
 
   return (
-    <section className="py-30 bg-dwapor-museum">
+    <section className="py-16 bg-dwapor-museum">
       <div className="max-w-7xl mx-auto px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -73,7 +73,7 @@ const CollectionSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-2 gap-8 mb-16"
+          className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16"
         >
           {featuredProducts.map((product, index) => (
             <motion.div

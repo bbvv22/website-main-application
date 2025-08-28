@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import axios from 'axios'; // Import axios
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -8,7 +9,8 @@ const ContactUs = () => {
     message: ''
   });
   const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [status, setStatus] = useState('idle'); // idle | sending | success | error
+  const [responseMsg, setResponseMsg] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,28 +28,35 @@ const ContactUs = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-    }
+    if (!formData.message.trim()) newErrors.message = 'Message is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      // In a real application, you would send this data to a backend API
-      console.log('Form submitted:', formData);
-      setIsSubmitted(true);
+    if (!validateForm() || status === 'sending') return;
+
+    setStatus('sending');
+    setResponseMsg('');
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/contact`, {
+        ...formData,
+        type: 'contact_us', // Specify the type for the backend
+      });
+      setStatus('success');
+      setResponseMsg(response.data.message || 'Your message has been sent successfully!');
       setFormData({ name: '', email: '', message: '' }); // Clear form
+    } catch (error) {
+      setStatus('error');
+      setResponseMsg(error.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -80,7 +89,7 @@ const ContactUs = () => {
             <h2 className="font-serif text-3xl text-dwapor-amber mb-4">Get in Touch</h2>
             <div className="space-y-3">
               <p className="font-sans text-dwapor-soft-gray text-lg">
-                <strong>Email:</strong> support@dwapor.com
+                <strong>Email:</strong> team.dwapor@gmail.com
               </p>
               <p className="font-sans text-dwapor-soft-gray text-lg">
                 <strong>Mob:</strong> +916301946813
@@ -98,16 +107,21 @@ const ContactUs = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <h2 className="font-serif text-3xl text-dwapor-amber mb-4">Send Us a Message</h2>
-            {isSubmitted && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
-                Your message has been sent successfully! We will get back to you soon.
+            
+            {/* Response Message */}
+            {status !== 'idle' && responseMsg && (
+              <div className={`px-4 py-3 rounded mb-6 ${
+                status === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : ''
+              } ${
+                status === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : ''
+              }`}>
+                {responseMsg}
               </div>
             )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-dwapor-soft-gray text-sm font-medium mb-2">
-                  Name
-                </label>
+                <label htmlFor="name" className="block text-dwapor-soft-gray text-sm font-medium mb-2">Name</label>
                 <input
                   type="text"
                   id="name"
@@ -119,14 +133,10 @@ const ContactUs = () => {
                   }`}
                   placeholder="Your Name"
                 />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                )}
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
               <div>
-                <label htmlFor="email" className="block text-dwapor-soft-gray text-sm font-medium mb-2">
-                  Email
-                </label>
+                <label htmlFor="email" className="block text-dwapor-soft-gray text-sm font-medium mb-2">Email</label>
                 <input
                   type="email"
                   id="email"
@@ -138,14 +148,10 @@ const ContactUs = () => {
                   }`}
                   placeholder="Your Email"
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                )}
+                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
               </div>
               <div>
-                <label htmlFor="message" className="block text-dwapor-soft-gray text-sm font-medium mb-2">
-                  Message
-                </label>
+                <label htmlFor="message" className="block text-dwapor-soft-gray text-sm font-medium mb-2">Message</label>
                 <textarea
                   id="message"
                   name="message"
@@ -157,17 +163,16 @@ const ContactUs = () => {
                   }`}
                   placeholder="Your Message"
                 ></textarea>
-                {errors.message && (
-                  <p className="text-red-500 text-sm mt-1">{errors.message}</p>
-                )}
+                {errors.message && <p className="text-red-500 text-sm mt-1">{errors.message}</p>}
               </div>
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full bg-dwapor-amber text-dwapor-museum py-3 px-6 rounded-lg font-sans text-sm uppercase tracking-wider hover:bg-dwapor-gold transition-colors"
+                disabled={status === 'sending'}
+                className="w-full bg-dwapor-amber text-dwapor-museum py-3 px-6 rounded-lg font-sans text-sm uppercase tracking-wider hover:bg-dwapor-gold transition-colors disabled:opacity-50"
               >
-                Send Message
+                {status === 'sending' ? 'Sending...' : 'Send Message'}
               </motion.button>
             </form>
           </motion.div>

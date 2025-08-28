@@ -25,8 +25,8 @@ const Cart = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleApplyCoupon = () => {
-    const message = applyCoupon(couponCode);
+  const handleApplyCoupon = async () => {
+    const message = await applyCoupon(couponCode);
     setCouponMessage(message);
   };
 

@@ -90,8 +90,28 @@ const OrderSuccess = () => {
                     <span className="font-medium">Total:</span> <span className="text-dwapor-gold font-medium">₹{orderData.total_amount.toFixed(2)}</span>
                   </p>
                   <p className="text-dwapor-soft-gray">
-                    <span className="font-medium">Payment:</span> {orderData.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
+                    <span className="font-medium">Payment Method:</span> {orderData.payment_method === 'cod' ? 'Cash on Delivery' : 'Online Payment'}
                   </p>
+                  {orderData.payment_status && (
+                    <p className="text-dwapor-soft-gray">
+                      <span className="font-medium">Payment Status:</span> {orderData.payment_status}
+                    </p>
+                  )}
+                  {orderData.payment_id && (
+                    <p className="text-dwapor-soft-gray text-sm">
+                      <span className="font-medium">Payment ID:</span> <span className="break-all">{orderData.payment_id}</span>
+                    </p>
+                  )}
+                  {orderData.razorpay_order_id && (
+                    <p className="text-dwapor-soft-gray text-sm">
+                      <span className="font-medium">Razorpay Order ID:</span> <span className="break-all">{orderData.razorpay_order_id}</span>
+                    </p>
+                  )}
+                  {orderData.payment_signature && (
+                    <p className="text-dwapor-soft-gray text-sm">
+                      <span className="font-medium">Payment Signature:</span> <span className="break-all">{orderData.payment_signature}</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -118,7 +138,7 @@ const OrderSuccess = () => {
                 {orderData.items.map((item) => (
                   <div key={item.id} className="flex items-center space-x-3">
                     <img
-                      src={item.image}
+                      src={item.image || '/placeholder.jpg'} // Added a fallback placeholder
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded"
                     />
@@ -127,7 +147,7 @@ const OrderSuccess = () => {
                         {item.name}
                       </h4>
                       <p className="text-dwapor-soft-gray text-sm">
-                        Size: {item.size} | Color: {item.color} | Quantity: {item.quantity}
+                        Size: {item.size} | Quantity: {item.quantity}
                       </p>
                     </div>
                     <span className="text-dwapor-gold font-medium">

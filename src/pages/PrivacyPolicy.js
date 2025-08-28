@@ -60,7 +60,7 @@ const PrivacyPolicy = () => {
         >
           Should you have any inquiries regarding this policy or your personal data, please do not hesitate to reach out:
           <br />
-          <span className="font-medium">Email:</span> support@dwapor.com
+          <span className="font-medium">Email:</span> team.dwapor@gmail.com
           <br />
           <span className="font-medium">Address:</span> Delight Homes, Narsingi
         </motion.p>
@@ -110,7 +110,7 @@ const PrivacyPolicy = () => {
           <br />
           You retain the right to opt out of marketing messages or withdraw your consent at any time by:
           <br />
-          Emailing support@dwapor.com
+          Emailing team.dwapor@gmail.com
           <br />
           Writing to our registered address
         </motion.p>
@@ -176,7 +176,7 @@ const PrivacyPolicy = () => {
         >
           We employ industry-leading security measures to prevent unauthorized access, misuse, or loss of your valuable data.
           <br />
-          If you suspect any data breach or security concern, please contact support@dwapor.com immediately.
+          If you suspect any data breach or security concern, please contact team.dwapor@gmail.com immediately.
         </motion.p>
 
         <motion.h2

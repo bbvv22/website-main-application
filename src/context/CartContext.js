@@ -42,6 +42,17 @@ export const CartProvider = ({ children }) => {
     wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated]);
 
+  // ✅ New useEffect for dynamic coupon re-evaluation
+  useEffect(() => {
+    if (couponCode) {
+      // Re-apply coupon if cart items change and a coupon is active
+      applyCoupon(couponCode);
+    } else {
+      // Ensure discount is 0 if no coupon is active
+      setDiscount(0);
+    }
+  }, [cartItems, couponCode]); // Depend on cartItems and couponCode
+
   const loadCartFromBackend = async (userId) => {
     try {
       setLoading(true);
@@ -206,20 +217,33 @@ export const CartProvider = ({ children }) => {
       }, 0);
   }
 
-  const applyCoupon = (code) => {
-    const total = getSubtotal();
-    if (code === 'YAYY250' && total >= 2500) {
-        setDiscount(250);
-        setCouponCode(code);
-        return { type: 'success', text: 'Coupon applied successfully!' };
-    } else if (code === 'YAYY500' && total >= 5000) {
-        setDiscount(500);
-        setCouponCode(code);
-        return { type: 'success', text: 'Coupon applied successfully!' };
-    } else {
+  const applyCoupon = async (code) => {
+    if (!code) {
+      setDiscount(0);
+      // setCouponCode(''); // Do not clear the code, user might be typing
+      return { type: 'error', text: 'Please enter a coupon code.' };
+    }
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/coupons/validate`, {
+        couponCode: code,
+        cartItems: cartItems,
+      });
+
+      if (response.data.valid) {
+        setDiscount(response.data.discount);
+        setCouponCode(response.data.couponCode);
+        return { type: 'success', text: response.data.message };
+      } else {
+        // This case might not be hit if backend returns non-2xx status
         setDiscount(0);
-        setCouponCode('');
-        return { type: 'error', text: 'Invalid coupon code or cart total not met.' };
+        // setCouponCode('');
+        return { type: 'error', text: response.data.message };
+      }
+    } catch (error) {
+      setDiscount(0);
+      // setCouponCode('');
+      const message = error.response?.data?.message || 'Invalid coupon code.';
+      return { type: 'error', text: message };
     }
   };
 

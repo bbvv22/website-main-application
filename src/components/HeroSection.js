@@ -36,7 +36,7 @@ const HeroSection = () => {
   const product = featured[index];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-dwapor-museum">
+    <section className="relative min-h-[calc(80vh)] flex items-center justify-center overflow-hidden bg-dwapor-museum">
       {/* Clean Black Background with Subtle Gradient */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-dwapor-museum" />
